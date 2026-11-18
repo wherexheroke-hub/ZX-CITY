@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>عالم ZX</title>
+<style>
+:root{--bg:#bfe3f5;--card:rgba(255,255,255,.92);--tx:#1d2733;--mut:#5b6b7a;--ac:#2e8b57;--bad:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a26;--card:rgba(28,38,52,.92);--tx:#e8eef5;--mut:#9fb0c1;--ac:#4cc38a;--bad:#ff7b6b}}
+:root[data-theme="dark"]{--bg:#101a26;--card:rgba(28,38,52,.92);--tx:#e8eef5;--mut:#9fb0c1;--ac:#4cc38a;--bad:#ff7b6b}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.hud{position:fixed;left:8px;right:8px;z-index:5;background:var(--card);border-radius:14px;padding:8px 12px;font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+#top{top:calc(env(safe-area-inset-top,0px) + 8px);display:flex;justify-content:space-between;gap:8px;align-items:center}
+#money{font-size:20px;font-weight:700;color:var(--ac)}
+.m{color:var(--mut);font-size:12px}
+#bot{bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+.row{display:flex;gap:8px}
+button{flex:1;border:0;border-radius:12px;padding:12px 6px;font-size:15px;font-weight:600;background:var(--ac);color:#fff;font-family:inherit}
+button.s{background:#3b6ea5}
+button:disabled{opacity:.5}
+#log{margin-top:8px;max-height:96px;overflow:auto;font-size:12px;display:none}
+#log div{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(128,128,128,.2)}
+.p{color:var(--ac)}.n{color:var(--bad)}
+#toast{position:fixed;top:30%;left:50%;transform:translateX(-50%);background:var(--card);padding:8px 16px;border-radius:20px;z-index:9;opacity:0;transition:opacity .3s;pointer-events:none}
+#msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:8;background:var(--bg);font-size:18px}
+
+#gate{position:fixed;inset:0;z-index:9;background:var(--bg);display:none;align-items:center;justify-content:center;padding:20px}
+#gate div{background:var(--card);padding:20px;border-radius:16px;max-width:340px;width:100%;text-align:center;line-height:1.7}
+#gate input{width:100%;box-sizing:border-box;padding:12px;margin:10px 0;border-radius:10px;border:1px solid var(--mut);font-size:16px;direction:ltr;text-align:center;background:transparent;color:var(--tx)}
+#req{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);left:8px;right:8px;z-index:6;background:var(--card);border-radius:14px;padding:10px;display:none;max-height:40%;overflow:auto}
+#req .r{display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(128,128,128,.2)}
+#req .r b{flex:1;direction:ltr;text-align:left}#req button{flex:0 0 44px;padding:8px 0}
+</style>
+<style>
+#toast{position:fixed;top:30%;left:50%;transform:translateX(-50%);background:var(--card);padding:8px 16px;border-radius:20px;z-index:20;opacity:0;transition:opacity .3s;pointer-events:none}
+#msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:30;background:var(--bg);font-size:18px;text-align:center;padding:24px}
+#gate{position:fixed;inset:0;z-index:25;background:var(--bg);display:none;align-items:center;justify-content:center;padding:20px}
+#gate .panel{background:var(--card);padding:20px;border-radius:16px;max-width:340px;width:100%;text-align:center;line-height:1.7}
+#gate input{width:100%;box-sizing:border-box;padding:12px;margin:10px 0;border-radius:10px;border:1px solid var(--mut);font-size:16px;direction:ltr;text-align:center;background:transparent;color:var(--tx)}
+#req{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);left:8px;right:8px;z-index:10;background:var(--card);border-radius:14px;padding:10px;display:none;max-height:40%;overflow:auto}
+#req .r{display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(128,128,128,.2)}
+#req .r b{flex:1;direction:ltr;text-align:left}
+#req button{flex:0 0 44px;padding:8px 0}
+#bot .row{flex-wrap:wrap}
+#bot button{min-width:54px}
+#ownerPanel{position:fixed;inset:8% 5%;z-index:15;background:var(--card);border-radius:16px;padding:14px;display:none;overflow:auto;box-shadow:0 8px 30px #0005;max-height:84%;color:var(--tx)}
+#ownerPanel h3{margin:4px 0 10px}#ownerPanel .actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}#ownerPanel .actions button{min-width:100px;flex:1}
+#ownerPanel .player{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid #8885;flex-wrap:wrap}
+#ownerPanel .player b{direction:ltr;text-align:left;flex:1;min-width:90px}
+#ownerPanel .player button{flex:0 0 auto;padding:8px 10px;font-size:13px}
+#bag{position:fixed;inset:18% 8%;z-index:14;background:var(--card);border-radius:16px;padding:16px;display:none;overflow:auto;max-height:65%;box-shadow:0 8px 30px #0005}
+#jobPanel{position:fixed;inset:7% 5%;z-index:16;background:var(--card);border-radius:16px;padding:14px;display:none;overflow:auto;max-height:86%;box-shadow:0 8px 30px #0005;color:var(--tx)}
+#jobPanel .jobChoice{display:block;width:100%;text-align:right;margin:7px 0;padding:12px;background:#3b6ea5}
+#jobPanel .jobChoice small{display:block;font-weight:400;opacity:.9;margin-top:4px}
+#jobPanel .jobNote{line-height:1.8;background:rgba(100,130,160,.13);padding:10px;border-radius:10px;margin:10px 0}
+#lifePanel{position:fixed;inset:5% 4%;z-index:18;background:var(--card);border-radius:16px;padding:14px;display:none;overflow:auto;max-height:90%;box-shadow:0 8px 30px #0005;color:var(--tx)}
+#lifePanel h3{margin:4px 0 12px}#lifePanel .lifeCard{border:1px solid #8885;border-radius:12px;padding:10px;margin:8px 0;line-height:1.7}
+#lifePanel button{margin:4px 2px;min-width:90px}#lifePanel .muted{font-size:12px;color:var(--mut)}
+
+#homePanel{position:fixed;inset:4% 3%;z-index:19;background:var(--card);border-radius:18px;padding:14px;display:none;overflow:auto;max-height:92%;box-shadow:0 8px 30px #0007;color:var(--tx)}
+#homePanel h3{margin:4px 0 12px}
+.homeRoom{position:relative;min-height:245px;border:9px solid #9a7655;border-radius:13px;background:linear-gradient(135deg,#eadcc4,#d8c4a5);padding:12px;margin:10px 0;color:#443528;overflow:hidden}
+.homeRoom:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 48px,#b99b7850 49px 51px),repeating-linear-gradient(0deg,transparent 0 48px,#b99b7850 49px 51px);pointer-events:none}
+.homeRoom>*{position:relative}
+.homeRoomTitle{font-weight:800;color:#5b3e2a;margin-bottom:8px}
+.homePeople{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:9px;margin:8px 0}
+.homePerson{background:#fffde9d9;border:1px solid #bda88d;border-radius:12px;padding:9px 5px;text-align:center;color:#403326}
+.homePerson .face{font-size:30px;line-height:1.3}
+.homePerson .personName{font-weight:800;font-size:13px}
+.homePerson .personState{font-size:11px;color:#426b51}
+.homeFurniture{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.homeFurniture .lifeCard{margin:0;text-align:center}
+.homeFurniture .fIcon{font-size:30px}
+.homeRoom .roomDecor{display:flex;justify-content:space-around;align-items:center;min-height:65px;font-size:32px}
+.roomPlan{background:rgba(59,110,165,.1);border:1px solid #7c9ab8;border-radius:12px;padding:10px;margin:8px 0;line-height:1.7}
+@media(max-width:420px){.homeFurniture{grid-template-columns:1fr 1fr}.homeRoom{min-height:210px;padding:8px}}
+</style>
+</head>
+<body>
+<div id="msg">جاري تحميل العالم…</div>
+<div class="hud" id="top">
+  <div><div id="money">$0</div><div class="m" id="job"></div><div class="m" id="ownerTag" style="display:none;color:#b8860b;font-weight:700">👑 وضع المالك</div></div>
+  <div style="text-align:left"><div class="m">دخل: <span class="p" id="inc">0</span> · مصاريف: <span class="n" id="exp">0</span></div><div class="m">المتصلين: <span id="onl">1</span> · اللاعبين: <span id="tot">1</span></div></div>
+</div>
+<div class="hud" id="bot">
+  <div class="row">
+    <button id="bw">اشتغل 💼</button>
+    <button class="s" id="jobsBtn">وظائفي 🧑‍💼</button>
+    <button class="s" id="familyBtn">العائلة ❤️</button>
+    <button class="s" id="homeBtn">بيتي 🏠</button>
+    <button class="s" id="carBtn">السيارات 🚗</button>
+    <button class="s" id="profilesBtn">اللاعبون 👤</button><button class="s" id="logoutBtn">خروج 🚪</button>
+    <button class="s" id="bu">طوّر البيت 🏠</button>
+    <button class="s" id="bl" style="flex:.4">📒</button>
+    <button class="s" id="bc" style="flex:.4">🎯</button>
+    <button class="s" id="bagBtn">🎁 أغراضي</button>
+    <button class="s" id="bo" style="display:none">لوحة المالك 👑 <span id="bn"></span></button>
+  </div>
+  <div id="log"></div>
+</div>
+<div id="req"></div><div id="bag"></div><div id="ownerPanel"></div><div id="jobPanel"></div><div id="lifePanel"></div><div id="homePanel"></div><div id="toast"></div>
+<div id="gate"><div class="panel"><h3>مرحباً بك في عالم ZX 🌆</h3><p id="gp">اكتب اسم حسابك في إنستغرام. سيظهر فوق بيتك.</p><input id="gi" maxlength="30" placeholder="Instagram username" autocomplete="off"><button id="gb">دخول العالم</button></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js"></script>
+<script>
+/* ZX shim: يشغّل نفس كود اللعبة فوق Supabase بدل نظام Claude */
+const SUPABASE_URL="https://rfbdbmjbuqgmjahajjug.supabase.co";
+const SUPABASE_KEY="sb_publishable_VawaIZxL53Dqo1JZAl6Mwg_qN1HKikF";
+const OWNER_PUBLIC="ZX GAMES OWNER";
+const normName=n=>String(n||"").toLowerCase().replace(/[\s_.]+/g,"");
+(function(){
+  let sb=null,uid=null,isOwnerFlag=false,roomObj=null;
+  const ready=(async()=>{
+    if(!/^https:\/\//.test(SUPABASE_URL)||!window.supabase)return false;
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+    let{data:{session}}=await sb.auth.getSession();
+    if(!session){const r=await sb.auth.signInAnonymously();if(r.error)throw r.error;session=r.data.session}
+    uid=session.user.id;
+    if(/[?&#]owner/.test(location.href)){
+      const c=prompt("رمز المالك:");
+      if(c){const r=await sb.rpc("claim_owner",{code:c});if(r.error)alert("رمز خاطئ")}
+    }
+    const o=await sb.from("owners").select("id").eq("id",uid).maybeSingle();
+    isOwnerFlag=!!o.data;
+    if(isOwnerFlag){let k=0;const t=setInterval(()=>{const gi=document.getElementById("gi");if(gi&&!gi.value)gi.value=OWNER_PUBLIC;if(++k>20)clearInterval(t)},250)}
+    return true;
+  })().catch(e=>{console.error("ZX shim",e);return false});
+
+  const cols={};
+  function watcher(col,errCb){
+    if(cols[col])return cols[col];
+    const w=cols[col]={rows:new Map(),subs:new Set(),ready:false};
+    const emit=()=>w.subs.forEach(f=>f());
+    sb.from("kv").select("id,data").eq("collection",col).then(r=>{
+      if(r.error){console.error(r.error);return}
+      r.data.forEach(x=>w.rows.set(x.id,x.data));w.ready=true;emit();
+    });
+    sb.channel("kv-"+col).on("postgres_changes",{event:"*",schema:"public",table:"kv",filter:"collection=eq."+col},p=>{
+      if(p.eventType==="DELETE")w.rows.delete(p.old.id);else w.rows.set(p.new.id,p.new.data);
+      emit();
+    }).subscribe();
+    return w;
+  }
+  const split=p=>{const i=p.indexOf("/");return[p.slice(0,i),p.slice(i+1)]};
+  const dbObj={
+    collection(col){return{onSnapshot(cb,err){
+      const w=watcher(col);
+      const f=()=>{if(w.ready)cb({docs:[...w.rows].map(([id,d])=>({id,exists:true,data:()=>d}))})};
+      w.subs.add(f);f();return()=>w.subs.delete(f);
+    }}},
+    doc(path){
+      const[col,id]=split(path);
+      return{
+        onSnapshot(cb,err){
+          const w=watcher(col);
+          const f=()=>{if(w.ready)cb({id,exists:w.rows.has(id),data:()=>w.rows.get(id)})};
+          w.subs.add(f);f();return()=>w.subs.delete(f);
+        },
+        async set(data){
+          const r=await sb.from("kv").upsert({collection:col,id,data,updated_at:new Date().toISOString()},{onConflict:"collection,id"});
+          if(r.error)throw r.error;
+          const w=cols[col];if(w){w.rows.set(id,data);w.subs.forEach(f=>f())}
+        },
+        async delete(){
+          const r=await sb.from("kv").delete().eq("collection",col).eq("id",id);
+          if(r.error)throw r.error;
+          const w=cols[col];if(w){w.rows.delete(id);w.subs.forEach(f=>f())}
+        }
+      };
+    }
+  };
+  function makeRoom(){
+    const ch=sb.channel("zx-room",{config:{presence:{key:uid}}});
+    let st={},joined=false;const cbs=[];
+    const peersNow=()=>{const ps=ch.presenceState();return Object.keys(ps).map(k=>{const m=ps[k][ps[k].length-1];return{peer:k,isMe:k===uid,presence:(m&&m.p)||{}}})};
+    const push=()=>{const peers=peersNow();cbs.forEach(f=>f({peers}))};
+    ch.on("presence",{event:"sync"},push).subscribe(s=>{if(s==="SUBSCRIBED"){joined=true;ch.track({p:st})}});
+    return{
+      onPeers(f){cbs.push(f);push()},
+      async presence(p){st={...st,...p};if(joined)await ch.track({p:st})}
+    };
+  }
+  // اسم المالك السري: لا يوجد هنا. السيرفر وحده يعرفه (في Supabase).
+  // أي اسم يُكتب في الخانة يُرسل للسيرفر؛ إذا طابق السري يصير هذا الجهاز مالكاً.
+  document.addEventListener("click",async e=>{
+    const b=e.target.closest&&e.target.closest("#gb");if(!b||!sb||!uid)return;
+    const gi=document.getElementById("gi");
+    const v=((gi&&gi.value)||"").trim().replace(/^@/,"");
+    if(!v)return;
+    if(normName(v)===normName(OWNER_PUBLIC)){if(isOwnerFlag)return;e.stopImmediatePropagation();e.preventDefault();alert("هذا الاسم محجوز");return}
+    e.stopImmediatePropagation();e.preventDefault();
+    const r=await sb.rpc("claim_owner",{code:v});
+    if(!r.error){
+      if(isOwnerFlag){gi.value=OWNER_PUBLIC;b.onclick&&b.onclick();return}
+      location.reload();return;
+    }
+    b.onclick&&b.onclick();
+  },true);
+  window.ZX_SIGNOUT=async()=>{if(sb)await sb.auth.signOut()};
+  window.claude={async use(name){
+    if(!(await ready))return null;
+    if(name==="db")return dbObj;
+    if(name==="user")return{async id(){return uid},isOwner(){return isOwnerFlag}};
+    if(name==="room")return roomObj||(roomObj=makeRoom());
+    return null;
+  }};
+})();
+
+</script>
+<script>
+const $=id=>document.getElementById(id);
+const COLS=11,GAP=9,MAXH=6;
+const RESERVED_CITY_CELLS=[1,5,9,12,17,21,25,29,34,38,42,46,50,54,58,62,66,70,74,78,82,86,90,94];
+const HOUSE_CELLS=Array.from({length:COLS*COLS},(_,i)=>i).filter(i=>!RESERVED_CITY_CELLS.includes(i));
+const cityPos=i=>({x:(RESERVED_CITY_CELLS[i]%COLS)*GAP,z:Math.floor(RESERVED_CITY_CELLS[i]/COLS)*GAP});
+const JOBS={
+ hospital:{name:"المستشفى 🏥",levels:[
+  ["متدرب",100,5,"تتعرف على أقسام المستشفى وتتعلم أساسيات رعاية المرضى"],
+  ["متدرب قرب التخرج",150,7,"تساعد الطاقم وتستعد للعمل كممرض"],
+  ["ممرض جديد",250,10,"تبدأ متابعة المرضى وتقديم الرعاية الأساسية"],
+  ["ممرض شبه رئيسي",350,15,"تساعد في تنظيم عمل فريق التمريض"],
+  ["ممرض رئيسي",500,17,"تتولى مسؤوليات مهمة وتتابع أداء الممرضين"],
+  ["مدير ممرضين",650,20,"تنظم جداول التمريض وتنسق العمل داخل القسم"],
+  ["مدير ممرضين أعلى مستوى",700,23,"أصبحت من أهم مسؤولي التمريض، وبقيت خطوة لتصبح دكتوراً"],
+  ["دكتور",800,25,"تبدأ عملك كطبيب وتشارك في تشخيص الحالات"],
+  ["دكتور متقدم",900,27,"تكتسب خبرة أكبر وتتابع الحالات باستقلالية أكبر"],
+  ["دكتور مشهور",1000,30,"وصلت إلى قمة المسار الطبي وأصبحت دكتوراً مشهوراً"]]},
+ teacher:{name:"المعلم 🏫",levels:[
+  ["مساعد صف",90,5,"تساعد المعلم في تجهيز الصف والأنشطة"],["متدرب تعليم",140,7,"تتعلم شرح الدروس ومتابعة الطلاب"],["معلم مبتدئ",230,10,"تبدأ تقديم الدروس للطلاب"],["معلم",330,15,"تدير الصف وتتابع تقدم الطلاب"],["معلم أول",470,17,"تساعد المعلمين الجدد وتطور أساليب التدريس"],["مشرف تربوي",620,20,"تتابع جودة التعليم وتنظم الخطط"],["نائب مدير المدرسة",720,23,"تساعد في إدارة المدرسة واتخاذ القرارات"],["مدير مدرسة",820,25,"تتولى إدارة المدرسة وطاقمها"],["مدير مدارس",920,27,"تشرف على أكثر من مدرسة وتطور أداءها"],["خبير تعليمي مشهور",1020,30,"أصبحت اسماً معروفاً في مجال التعليم"]]},
+ cleaner:{name:"عامل النظافة 🧹",levels:[
+  ["متدرب نظافة",70,5,"تتعلم ترتيب المكان واستخدام أدوات التنظيف"],["عامل مبتدئ",110,7,"تتولى مهام النظافة اليومية"],["عامل نشيط",190,10,"تنظف مساحات أكبر وتحافظ على ترتيبها"],["عامل محترف",270,15,"تتعامل مع مهام النظافة المتنوعة"],["عامل أول",390,17,"تساعد في توزيع المهام على الفريق"],["مشرف نظافة",520,20,"تتابع جودة النظافة وتنظم جدول العمل"],["مشرف عام",630,23,"تشرف على فرق النظافة في عدة مواقع"],["مدير خدمات",740,25,"تدير خدمات النظافة والاحتياجات"],["مدير مرافق",850,27,"تتابع مرافق المؤسسة وخدماتها"],["خبير خدمات مشهور",960,30,"أصبحت من أبرز الخبراء في إدارة الخدمات"]]},
+ postal:{name:"البريد 📮",levels:[
+  ["متدرب بريد",80,5,"تتعلم فرز الرسائل والطرود"],["مساعد بريد",120,7,"تساعد في تجهيز البريد للتوزيع"],["موظف بريد جديد",210,10,"تستقبل الرسائل وتسجلها"],["موظف توزيع",310,15,"تتولى توصيل الرسائل والطرود"],["موظف بريد أول",430,17,"تتابع عمليات التوزيع وتنظيمها"],["مشرف بريد",570,20,"تشرف على فريق البريد ومسارات التوصيل"],["مدير فرع بريد",670,23,"تدير فرع البريد ومهامه اليومية"],["مدير البريد",780,25,"تدير عمليات البريد على نطاق واسع"],["مدير بريد إقليمي",890,27,"تشرف على عدة فروع ومناطق"],["خبير بريد مشهور",1000,30,"أصبحت من أشهر الشخصيات في قطاع البريد"]]},
+ police:{name:"الشرطة 👮",levels:[
+  ["متدرب شرطة",110,5,"تتعلم القوانين وخدمة المجتمع"],["شرطي تحت التدريب",160,7,"تتعلم إجراءات العمل والانضباط"],["شرطي جديد",270,10,"تبدأ دوريات المراقبة ومساعدة الناس"],["شرطي",390,15,"تتولى مسؤوليات ميدانية أكبر"],["شرطي أول",530,17,"تساعد في تنظيم عمل زملائك"],["رقيب",690,20,"تشرف على فريق صغير وتنظم المناوبات"],["رقيب أول",790,23,"تتولى مسؤوليات إشرافية أوسع"],["ملازم",900,25,"تشارك في إدارة مركز الشرطة"],["نقيب",1010,27,"تقود فرق العمل وتتابع الخطط"],["قائد شرطة مشهور",1120,30,"وصلت إلى أعلى رتبة في مسارك الشرطي"]]},
+ soldier:{name:"الجندي 🎖️",levels:[
+  ["مستجد",120,5,"تتعرف على النظام العسكري والانضباط"],["جندي متدرب",170,7,"تتابع التدريب الأساسي والعمل الجماعي"],["جندي جديد",280,10,"تبدأ مهامك ضمن الوحدة"],["جندي",410,15,"تتولى مسؤوليات أكبر داخل وحدتك"],["جندي أول",560,17,"تساعد في تنظيم مهام الفريق"],["عريف",710,20,"تشرف على مجموعة من الجنود"],["رقيب",830,23,"تتابع تنظيم الوحدة والانضباط"],["رقيب أول",940,25,"تتولى مهام إشرافية متقدمة"],["ملازم",1050,27,"تشارك في قيادة الوحدة وتنظيمها"],["قائد مشهور",1160,30,"وصلت إلى أعلى رتبة في مسارك العسكري"]]}
+};
+// وظائف بسيطة جديدة: خمسة مستويات فقط، والراتب الأساسي لا يتجاوز 500.
+Object.assign(JOBS,{
+ barber:{name:"الحلاق 💈",simple:true,investmentCost:6500,investmentChance:0.04,levels:[["مساعد حلاق",90,5,"تجهز الأدوات وتتعلم أساسيات الحلاقة"],["حلاق مبتدئ",160,7,"تقدم قصات بسيطة للزبائن"],["حلاق",260,10,"تتقن قصات متنوعة وتخدم زبائن أكثر"],["حلاق محترف",380,13,"تقدم قصات احترافية وتساعد المتدربين"],["حلاق مشهور",500,16,"أصبحت من أفضل الحلاقين في المدينة"]]},
+ plumber:{name:"السباك 🔧",simple:true,investmentCost:7000,investmentChance:0.04,levels:[["مساعد سباك",100,5,"تساعد في تجهيز أدوات الصيانة"],["سباك مبتدئ",170,7,"تصلح الأعطال البسيطة"],["سباك",280,10,"تنجز أعمال السباكة اليومية"],["سباك محترف",390,13,"تتعامل مع أعمال الصيانة الصعبة"],["سباك خبير",500,16,"أصبحت سباكاً معروفاً بخبرتك"]]},
+ baker:{name:"الخباز 🥖",simple:true,investmentCost:6000,investmentChance:0.045,levels:[["مساعد مخبز",85,5,"تجهز المكونات وترتب المخبز"],["خباز متدرب",150,7,"تتعلم إعداد المعجنات"],["خباز",250,10,"تخبز الخبز والحلويات اليومية"],["خباز محترف",375,13,"تبتكر وصفات وتدير الفرن"],["خباز رئيسي",500,16,"أصبحت خبازاً مميزاً في المدينة"]]},
+ mechanic:{name:"ميكانيكي سيارات 🚗",simple:true,investmentCost:9000,investmentChance:0.035,levels:[["مساعد كراج",110,5,"تنظف الورشة وتجهز الأدوات"],["متدرب ميكانيكي",180,7,"تتعلم فحص السيارات"],["ميكانيكي",290,10,"تصلح الأعطال المعتادة"],["ميكانيكي محترف",400,13,"تنجز إصلاحات متقدمة"],["كبير الميكانيكيين",500,16,"أصبحت خبيراً في صيانة السيارات"]]},
+ electrician:{name:"كهربائي ⚡",simple:true,investmentCost:7500,investmentChance:0.04,levels:[["مساعد كهربائي",100,5,"تجهز معدات العمل"],["متدرب كهرباء",175,7,"تتعلم أعمال التمديدات الأساسية"],["كهربائي",285,10,"تنجز أعمال الصيانة المعتادة"],["كهربائي محترف",395,13,"تتعامل مع مشاريع أكبر"],["كهربائي خبير",500,16,"أصبحت خبيراً في مهنتك"]]},
+ tailor:{name:"الخياط 🧵",simple:true,investmentCost:5500,investmentChance:0.05,levels:[["مساعد خياط",80,5,"ترتب الأقمشة والأدوات"],["متدرب خياطة",145,7,"تتعلم تعديلات الملابس"],["خياط",245,10,"تخيط الملابس والقطع البسيطة"],["خياط محترف",370,13,"تنفذ تصاميم وتعديلات دقيقة"],["مصمم أزياء محلي",500,16,"أصبحت معروفاً بتصاميمك"]]},
+ gardener:{name:"بستاني 🌱",simple:true,investmentCost:5000,investmentChance:0.05,levels:[["مساعد بستاني",75,5,"تسقي النباتات وترتب الحديقة"],["بستاني متدرب",135,7,"تتعلم العناية بالنباتات"],["بستاني",230,10,"تعتني بالحدائق وتزرع الأزهار"],["بستاني محترف",360,13,"تصمم المساحات الخضراء"],["خبير تنسيق حدائق",500,16,"أصبحت معروفاً بتنسيق الحدائق"]]},
+ chef:{name:"طاهٍ 🍳",simple:true,investmentCost:8500,investmentChance:0.035,levels:[["مساعد مطبخ",100,5,"تجهز المكونات وتنظم المطبخ"],["طاهٍ متدرب",170,7,"تتعلم إعداد الأطباق"],["طاهٍ",285,10,"تحضر وجبات متنوعة"],["طاهٍ محترف",400,13,"تبتكر أطباقاً مميزة"],["شيف رئيسي",500,16,"أصبحت شيفاً معروفاً"]]},
+ delivery:{name:"مندوب توصيل 🛵",simple:true,investmentCost:6500,investmentChance:0.045,levels:[["مساعد توصيل",90,5,"تجهز الطلبات للتوصيل"],["مندوب مبتدئ",155,7,"تبدأ توصيل الطلبات القريبة"],["مندوب توصيل",255,10,"تنجز طلبات أكثر"],["مندوب محترف",380,13,"تدير مسارات التوصيل"],["مندوب مميز",500,16,"أصبحت من أشهر مندوبي التوصيل"]]},
+ photographer:{name:"مصور 📸",simple:true,investmentCost:8000,investmentChance:0.035,levels:[["مساعد تصوير",95,5,"تجهز الكاميرا ومكان التصوير"],["مصور متدرب",165,7,"تتعلم أساسيات التصوير"],["مصور",275,10,"تصور المناسبات والمنتجات"],["مصور محترف",395,13,"تقدم جلسات تصوير احترافية"],["مصور مشهور محلياً",500,16,"أصبحت مصوراً معروفاً في المدينة"]]}
+});
+const JOB_KEYS=Object.keys(JOBS);
+const promotionCount=level=>level<=3?5:level<=6?4:3;
+function currentJob(){return JOBS[S.activeJob]||JOBS.hospital}
+function currentProgress(){S.jobs=S.jobs||{};const p=S.jobs[S.activeJob]||{level:1,works:0,experienced:false};S.jobs[S.activeJob]=p;return p}
+function jobMaxLevel(key=S.activeJob){return (JOBS[key]?.levels?.length)||1}
+function jobLevel(){return currentJob().levels[Math.max(0,Math.min(jobMaxLevel()-1,currentProgress().level-1))]}
+function normalizeJobs(){
+ S.jobs=S.jobs||{};
+ if(!S.activeJob){S.activeJob="hospital";const old=Math.max(1,Math.min(10,(S.job||0)+1));S.jobs.hospital={level:old,works:0,experienced:false}}
+ if(!JOBS[S.activeJob])S.activeJob="hospital";
+ for(const k of JOB_KEYS){if(!S.jobs[k])S.jobs[k]={level:1,works:0,experienced:false};S.jobs[k].level=Math.max(1,Math.min(jobMaxLevel(k),Number(S.jobs[k].level)||1));}
+}
+const fmt=n=>Math.floor(Number(n)||0).toLocaleString("en-US");
+const hue=s=>{let h=0;for(const c of String(s||""))h=(h*31+c.charCodeAt(0))>>>0;return h%360};
+const plotPos=i=>{const cell=HOUSE_CELLS[Math.max(0,Math.min(HOUSE_CELLS.length-1,Number(i)||0))];return {x:(cell%COLS)*GAP,z:Math.floor(cell/COLS)*GAP}};
+const WORLD_DEFAULTS={housePriceMultiplier:1,carPriceMultiplier:1,salaryMultiplier:1,announcement:"",event:""};
+let WORLD={...WORLD_DEFAULTS};
+const worldPrice=(n)=>Math.max(0,Math.round((Number(n)||0)*(Number(WORLD.carPriceMultiplier)||1)));
+const upCost=h=>Math.round(120*Math.pow(1.85,h-1)*(Number(WORLD.housePriceMultiplier)||1));
+let me="local",owner=false,approved=false,db=null,room=null,peers=[],players={},S=null,insta=null;
+let dirty=false,started=false,gotP=false,cd=0;
+function toast(t){const e=$("toast");e.textContent=t;e.style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>e.style.opacity=0,1800)}
+function log(t,a){S.log=S.log||[];S.items=S.items||[];normalizeJobs();ensureLife();S.log.unshift({t,a});S.log=S.log.slice(0,12);hud()}
+function localLoad(){try{return JSON.parse(localStorage.getItem("zx-city-player")||"null")}catch(e){return null}}
+function localSave(){try{if(S)localStorage.setItem("zx-city-player",JSON.stringify(S))}catch(e){}}
+function savePlayer(){if(db){db.doc("players/"+me).set(S).catch(()=>{dirty=true})}else localSave()}
+// ---------- three.js ----------
+const R=new THREE.WebGLRenderer({antialias:false});
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+document.body.prepend(R.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xbfe3f5);scene.fog=new THREE.Fog(0xbfe3f5,45,110);
+const cam=new THREE.PerspectiveCamera(45,1,.1,200);
+scene.add(new THREE.AmbientLight(0xffffff,.75));
+const sun=new THREE.DirectionalLight(0xffffff,.55);sun.position.set(20,40,10);scene.add(sun);
+const mid=(COLS-1)*GAP/2;
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.MeshLambertMaterial({color:0x5f6670}));
+ground.rotation.x=-Math.PI/2;ground.position.set(mid,0,mid);scene.add(ground);
+const gBox=new THREE.BoxGeometry(1,1,1),gCone=new THREE.ConeGeometry(2.4,1.4,4),gSph=new THREE.SphereGeometry(.7,8,6);gCone.rotateY(Math.PI/4);
+const mats={};const mat=c=>mats[c]||(mats[c]=new THREE.MeshLambertMaterial({color:c}));
+function box(g,w,h,d,x,y,z,c){const m=new THREE.Mesh(gBox,mat(c));m.scale.set(w,h,d);m.position.set(x,y,z);g.add(m);return m}
+function roof(g,w,d,y,x,z,c){const m=new THREE.Mesh(gCone,mat(c));m.scale.set(w/3.39,1,d/3.39);m.position.set(x,y+.7,z);g.add(m)}
+function tree(g,x,z,s){box(g,.28,.8*s,.28,x,.5,z,0x6b4426);const m=new THREE.Mesh(gSph,mat(0x3f8f4a));m.scale.set(s,s,s);m.position.set(x,1.2*s+.2,z);g.add(m)}
+const lblC={};
+function label(t,job=""){
+  const key=t+"|"+job;
+  if(!lblC[key]){const c=document.createElement("canvas");c.width=320;c.height=96;const x=c.getContext("2d");
+    x.fillStyle="rgba(20,20,30,.84)";x.beginPath();if(x.roundRect)x.roundRect(4,5,312,86,18);else x.rect(4,5,312,86);x.fill();
+    x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.font="bold 25px sans-serif";x.fillText(t===OWNER_PUBLIC?"👑 "+t:"@"+t,160,31,292);
+    x.font="bold 20px sans-serif";x.fillStyle="#bfe3f5";x.fillText(job,160,66,292);
+    lblC[key]=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true})}
+  const s=new THREE.Sprite(lblC[key]);s.scale.set(4.5,1.35,1);return s;
+}
+// ---------- city streets, workplaces and commuting NPCs ----------
+const cityActors={npcs:[],cars:[]};
+const WORKPLACE_BUILDINGS=[
+ {key:"hospital",name:"المستشفى",icon:"🏥",...cityPos(0),color:0xe8f5ff},
+ {key:"teacher",name:"المدرسة",icon:"🏫",...cityPos(1),color:0xf6df9b},
+ {key:"cleaner",name:"مركز النظافة",icon:"🧹",...cityPos(2),color:0xd9efcf},
+ {key:"postal",name:"مكتب البريد",icon:"📮",...cityPos(3),color:0xf5d2b8},
+ {key:"police",name:"مركز الشرطة",icon:"👮",...cityPos(4),color:0xd5e5f7},
+ {key:"soldier",name:"مركز الجيش",icon:"🎖️",...cityPos(5),color:0xdce5c5},
+ {key:"company",name:"مقر الشركة",icon:"🏢",...cityPos(6),color:0xc9d9ed},
+ {key:"restaurant",name:"المطعم",icon:"🍽️",...cityPos(7),color:0xf4c6a2},
+ {key:"amusement",name:"مدينة الملاهي",icon:"🎡",...cityPos(8),color:0xe8c5ed},
+ {key:"training",name:"ساحة تدريب الجنود",icon:"🪖",...cityPos(9),color:0xc5d6a6},
+ {key:"bank",name:"البنك",icon:"🏦",...cityPos(10),color:0xe5d9b8},
+ {key:"fire",name:"مركز الإطفاء",icon:"🚒",...cityPos(11),color:0xf0c1c1},
+ {key:"market",name:"السوق والمتاجر",icon:"🛒",...cityPos(12),color:0xd7e8c8},
+ {key:"park",name:"الحديقة العامة",icon:"🌳",...cityPos(13),color:0xb8d9ae},
+ {key:"cinema",name:"السينما",icon:"🎬",...cityPos(14),color:0xd1c7e8},
+ {key:"library",name:"المكتبة",icon:"📚",...cityPos(15),color:0xd9c6ad},
+ {key:"beach",name:"شاطئ البحر",icon:"🏖️",...cityPos(16),color:0x9ed9e8},
+ {key:"cafe",name:"المقهى",icon:"☕",...cityPos(17),color:0xd9c1a8},
+ {key:"gym",name:"النادي الرياضي",icon:"🏋️",...cityPos(18),color:0xb8c9dc},
+ {key:"mall",name:"المول",icon:"🛍️",...cityPos(19),color:0xd9c6e8},
+ {key:"clinic",name:"العيادة",icon:"🩺",...cityPos(20),color:0xe3f0ed},
+ {key:"playground",name:"مدينة ألعاب الأطفال",icon:"🛝",...cityPos(21),color:0xf1d7a7},
+ {key:"aquarium",name:"الأكواريوم",icon:"🐠",...cityPos(22),color:0x9ed9e8},
+ {key:"museum",name:"المتحف",icon:"🏛️",...cityPos(23),color:0xd7d2c7}
+];
+function makeRoad(x,z,w,d){box(scene,w,.045,d,x,.025,z,0x343a40);}
+function addBuildingDesign(g,b){
+ // مبانٍ معمارية مجسّمة: لكل نوع كتلة وسقف ومدخل وتفاصيل مختلفة، وليس مجرد تبديل ألوان
+ const cyl=(r1,r2,h,x,y,z,c,seg=12)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,seg),mat(c));m.position.set(x,y,z);g.add(m);return m};
+ const win=(x,y,z,w=1,h=1,c=0x79c9e8)=>{box(g,w,h,.13,x,y,z,c);box(g,w+.12,.09,.16,x,y-h/2,z+.025,0xe9f0f2)};
+ const door=(x=0,w=1.1,h=2.1,z=3.02,c=0x443b35)=>{box(g,w,h,.18,x,h/2,z,c);box(g,.08,h,.2,x-w*.32,h/2,z+.12,0xc6a66b)};
+ const roofSlab=(w,d,y,c)=>box(g,w,.28,d,0,y,0,c);
+ switch(b.key){
+  case 'bank':
+   // بنك كلاسيكي: قاعدة حجرية، أعمدة، درج، وسقف مثلث
+   box(g,8.1,3.6,5.8,0,1.9,0,0xd8d0bd);box(g,8.5,.45,6.2,0,3.9,0,0x746b5b);
+   box(g,8.8,.22,1.0,0,.2,3.0,0xb7ad99);box(g,7.8,.22,.8,0,.43,2.8,0xd6ccb8);
+   for(const x of [-3,-1.5,0,1.5,3]){cyl(.22,.28,2.8,x,1.9,2.55,0xf3eee2,12);cyl(.34,.34,.18,x,3.28,2.55,0xb8ad99,12);cyl(.34,.34,.18,x,.5,2.55,0xb8ad99,12)}
+   const ped=new THREE.Mesh(new THREE.ConeGeometry(4.45,1.25,4),mat(0x8b806d));ped.rotation.y=Math.PI/4;ped.scale.z=.22;ped.position.set(0,4.55,2.35);g.add(ped);
+   door(0,1.25,2.25,2.98,0x594d40);win(-2.45,2.05,2.99,1.05,1.3,0x8db6c3);win(2.45,2.05,2.99,1.05,1.3,0x8db6c3);break;
+  case 'hospital':
+   // مستشفى متعدد الأجنحة مع برج مركزي ومدخل طوارئ بارز
+   box(g,8,3.5,5.5,0,1.85,0,0xe9f0f1);box(g,3.1,5.6,3.5,0,2.9,-.45,0xf8fbfc);
+   box(g,3.5,.35,3.8,0,5.75,-.45,0x9eb9c5);box(g,8.3,.28,5.8,0,3.7,0,0xa9c2cb);
+   for(const x of [-3,-1.8,1.8,3])for(const y of [1.1,2.25,3.4])win(x,y,2.83,.78,.72,0x83c9df);
+   for(const y of [1.4,2.7,4])win(0,y,1.36,1.15,.82,0x83c9df);
+   box(g,2.6,1.35,1.1,0,.68,3.05,0x9bb6c0);box(g,3.1,.22,.3,0,1.42,3.1,0xd64a4a);
+   box(g,.35,1.15,.22,0,1.42,3.28,0xffffff);box(g,1.15,.35,.22,0,1.42,3.28,0xffffff);
+   box(g,2.2,.2,.7,-2.7,.15,3.25,0x56616a);break;
+  case 'teacher':
+   // مدرسة: جناحان، سقف مائل، صفوف نوافذ وساحة أمامية
+   box(g,7.8,2.8,5.5,0,1.5,0,0xe8d3a0);roof(g,8.5,6.1,3.0,0,-.2,0x914f3c);
+   box(g,1.8,3.7,1.8,0,2,-1.1,0xd8bd82);roof(g,2.3,2.2,3.9,0,-1.1,0x854a3c);
+   for(const x of [-2.8,-1.4,1.4,2.8])win(x,1.85,2.83,.9,.95,0x77b9d6);
+   door(0,1.25,2.0,2.95,0x73533d);box(g,2.5,.16,.35,0,3.05,3.02,0xf7f0dc);
+   box(g,5,.15,1.5,0,.12,4.15,0x7ab66b);break;
+  case 'cleaner':
+   // مركز خدمات بمستودع وباب رول صناعي
+   box(g,7.8,3.4,5.6,0,1.75,0,0xcbd5c5);roofSlab(8.2,6,3.55,0x596c60);
+   box(g,3.1,2.5,.2,-1.5,1.35,2.92,0x657b82);for(let x=-2.7;x<=-.3;x+=.35)box(g,.07,2.35,.22,x,1.35,3.04,0xb8c7c8);
+   door(2.1,1.2,2.1,2.95,0x745a43);win(2.1,2.45,2.98,.8,.55,0x91c5d7);break;
+  case 'postal':
+   // مكتب بريد كلاسيكي بسقف قرميدي وبرج ساعة وصندوق بريد
+   box(g,7.5,2.8,5.4,0,1.5,0,0xe8c5a7);roof(g,8.3,6.2,2.9,0,0,0x9c4438);
+   box(g,1.65,4.2,1.5,2.5,2.1,-.7,0xe5c3a3);roof(g,2,1.8,4.3,2.5,-.7,0x8c4037);
+   box(g,.95,.95,.15,2.5,3.25,.1,0xeee7d5);cyl(.07,.07,.18,2.5,3.25,.22,0x514b43,12);
+   win(-2,1.75,2.78,1.1,1.05,0x8ac8df);door(0,1.1,2.0,2.9,0x714c3b);
+   box(g,.85,1.2,.8,3.25,.65,2.1,0xc33e36);box(g,.95,.12,.9,3.25,1.3,2.1,0xf4dfbd);break;
+  case 'police':
+   // مركز شرطة بواجهة رسمية ومدخل مركبات
+   box(g,7.8,3.4,5.6,0,1.75,0,0xd9e2e9);roofSlab(8.2,5.9,3.55,0x294d70);
+   box(g,3.1,2.35,.2,0,1.25,2.95,0x6b8294);box(g,3.2,.22,.24,0,2.55,3.05,0x254b70);
+   for(const x of [-2.65,2.65])win(x,2.0,2.92,1.05,1.2,0x80b9d8);
+   door(0,1.15,2.0,3.02,0x33495d);cyl(.35,.35,.25,0,3.9,.1,0xd5b34c,8);
+   box(g,7,.15,1.2,0,.1,3.9,0x8d969c);break;
+  case 'soldier': case 'training':
+   // منشأة عسكرية: مبنى قيادة منخفض، برج مراقبة وساحة تدريب مسوّرة
+   box(g,6.8,2.6,4.8,0,1.35,0,0x9cae86);roofSlab(7.2,5.2,2.8,0x58694a);
+   box(g,1.8,4.8,1.8,2.1,2.4,-.7,0x899b75);roofSlab(2.1,2.1,4.85,0x4c5d43);
+   for(const x of [-2.2,0,2.2])win(x,1.65,2.5,.85,.75,0x6d8990);
+   door(0,1.1,1.9,2.85,0x4e5945);
+   for(const x of [-4,4]){box(g,.22,1.5,.22,x,.75,3.3,0x7c765f);box(g,.25,.18,1.3,x,1.48,3.3,0x7c765f)}
+   box(g,3,.12,2.1,0,.08,4.35,0x84956f);break;
+  case 'company':
+   // برج أعمال حديث بزجاج مستمر وطوابق بارزة
+   box(g,6.8,6.5,5.1,0,3.25,0,0x526f83);box(g,7.15,.3,5.45,0,6.55,0,0x344c60);
+   for(let y=1.0;y<=5.8;y+=1.15){box(g,6.35,.12,.18,0,y,2.62,0xc5dce4);for(let x of [-2.45,-1.25,0,1.25,2.45])box(g,.92,.78,.12,x,y+.45,2.67,0x9bd4e4)}
+   box(g,2.1,2.2,.22,0,1.1,2.75,0x263d50);box(g,2.4,.2,.25,0,2.25,2.9,0xadc7d0);
+   box(g,1.2,1.3,1.2,0,7.1,0,0x344c60);break;
+  case 'restaurant': case 'cafe':
+   // مطعم/مقهى بواجهة تجارية، نوافذ بانورامية، شرفة ومظلات
+   box(g,7.7,2.9,5.4,0,1.5,0,b.key==='cafe'?0xc8a889:0xe7c49f);
+   roof(g,8.4,6,3,0,0,b.key==='cafe'?0x654936:0xa94835);
+   box(g,7.9,.45,.5,0,2.55,2.85,b.key==='cafe'?0x73513e:0xb74735);
+   for(const x of [-2.55,2.55])win(x,1.55,2.82,1.45,1.45,0x86cde0);
+   door(0,1.25,2.05,2.95,0x5c4438);box(g,7.5,.16,1.2,0,.12,3.9,0xb88a62);
+   for(const x of [-2.5,0,2.5]){cyl(.07,.07,1.1,x,.55,4.15,0x6d5543,8);cyl(.55,.55,.12,x,1.15,4.15,0xf1e1c9,12)}break;
+  case 'amusement': case 'playground':
+   // مدينة ألعاب مفتوحة: عجلة دوارة، بوابة تذاكر، لعبة دوارة وزحليقة
+   box(g,8,.18,6,0,.12,0,0x76b86e);box(g,8,1.15,.3,0,.7,2.8,0x9c4e8e);
+   const wheel=new THREE.Mesh(new THREE.TorusGeometry(1.85,.14,10,32),mat(0xd84d9b));wheel.position.set(-1.6,3.3,.15);g.add(wheel);
+   cyl(.16,.16,3.9,-1.6,1.75,.1,0x6e5689,12);
+   for(let i=0;i<10;i++){const a=i*Math.PI/5;const pod=new THREE.Mesh(new THREE.SphereGeometry(.32,10,8),mat([0xffc857,0x54c7ad,0x65a9ec,0xf28b82][i%4]));pod.position.set(-1.6+Math.cos(a)*1.85,3.3+Math.sin(a)*1.85,.18);g.add(pod)}
+   cyl(1.0,1.0,.35,2.15,1.45,.5,0xf3c44e,16);for(let i=0;i<6;i++){const a=i*Math.PI/3;box(g,.18,1.25,.18,2.15+Math.cos(a)*.7,2.05,.5+Math.sin(a)*.7,0xe85c70)}
+   box(g,2.1,1.5,.25,2.5,.8,2.9,0xf1d8f2);break;
+  case 'beach':
+   // شاطئ مفتوح مع رصيف خشبي وكراسي ومظلات وأمواج
+   box(g,8,.16,6,0,.12,0,0xe8d39b);box(g,8,.12,2.4,0,.18,-3.1,0x35a8d4);
+   box(g,3.8,.22,1.0,0,.35,1.9,0x9a704b);
+   for(const x of [-2.7,0,2.7]){cyl(.08,.08,1.8,x,.9,.1,0x8a5a38,8);const canopy=new THREE.Mesh(gCone,mat([0xf36f76,0xf3d05c,0x5b9bd5][(x+2.7)/2.7]));canopy.scale.set(.8,.55,.8);canopy.position.set(x,1.9,.1);g.add(canopy);box(g,.75,.16,.45,x,.55,1.2,0xf5f0df)}break;
+  case 'park':
+   // حديقة عامة بممر متعرج وأشجار ومقاعد ونافورة
+   box(g,8,.16,6,0,.12,0,0x70b66b);box(g,1.1,.12,6,0,.22,0,0xd8c9a4);box(g,8,.12,.8,0,.23,1.6,0xd8c9a4);
+   for(const x of [-3,3])for(const z of [-1.5,1.5])tree(g,x,z,1.15);
+   cyl(.8,.95,.45,0,.48,-.9,0x9fb8c3,16);cyl(.48,.48,.18,0,.8,-.9,0x6cb9d4,16);
+   for(const x of [-2,2]){box(g,1.5,.16,.45,x,.65,2.2,0x875c3e);for(const dx of [-.55,.55])box(g,.12,.55,.12,x+dx,.35,2.2,0x5b4637)}break;
+  case 'cinema':
+   // سينما حقيقية: كتلة عريضة داكنة، برج لافتة، marquee مضيء، بوسترات، شبابيك تذاكر ومدخل مزدوج
+   box(g,8.2,3.5,5.7,0,1.8,0,0x34313b);box(g,8.45,.35,6,0,3.75,0,0x1f2029);
+   box(g,2.0,5.2,.7,-3.05,2.65,2.65,0x29232e);box(g,2.0,5.2,.7,3.05,2.65,2.65,0x29232e);
+   box(g,4.8,1.2,.55,0,3.0,3.0,0x8e315e);box(g,5.0,.16,.65,0,3.68,3.0,0xf6c95b);
+   for(let x=-2.0;x<=2.01;x+=.5)for(let y of [2.78,3.22]){const bulb=new THREE.Mesh(gSph,mat(0xffdf83));bulb.scale.set(.055,.055,.055);bulb.position.set(x,y,3.34);g.add(bulb)}
+   box(g,1.5,2.1,.18,0,1.15,3.02,0x51465d);box(g,.55,1.85,.22,-.4,1.1,3.16,0x1e2734);box(g,.55,1.85,.22,.4,1.1,3.16,0x1e2734);
+   for(const x of [-2.7,2.7]){box(g,1.0,1.5,.2,x,1.65,3.0,0x9c4d78);box(g,.82,1.25,.08,x,1.65,3.13,0x26364b)}
+   box(g,2.2,.75,.22,0,.42,3.05,0x5b4655);break;
+  case 'library':
+   // مكتبة كلاسيكية بواجهة متناظرة ونوافذ طويلة ودرج
+   box(g,7.8,3.5,5.6,0,1.8,0,0xd5c2a2);roofSlab(8.2,5.9,3.65,0x6d5948);
+   for(const x of [-2.8,-1.4,1.4,2.8]){cyl(.16,.2,2.7,x,1.8,2.55,0xeee0c5,10);win(x,1.9,2.83,.72,1.55,0x7fb7ca)}
+   door(0,1.35,2.2,2.92,0x604832);box(g,3,.18,1.2,0,.12,3.55,0xb5a184);break;
+  case 'museum':
+   // متحف بواجهة حجرية وقبة مركزية وأعمدة
+   box(g,8,3.2,5.8,0,1.65,0,0xd2cfc5);roofSlab(8.4,6.1,3.3,0x8b877d);
+   for(const x of [-3,-1.5,1.5,3])cyl(.22,.28,2.6,x,1.65,2.65,0xf0eee7,12);
+   const dome=new THREE.Mesh(new THREE.SphereGeometry(1.5,16,10,0,Math.PI*2,0,Math.PI/2),mat(0x9b9c9a));dome.scale.set(1.2,.9,1);dome.position.set(0,3.45,0);g.add(dome);
+   door(0,1.2,2.0,2.98,0x655f55);break;
+  case 'gym':
+   // نادي رياضي بواجهة زجاجية، سقف معدني ولافتة بارزة
+   box(g,8,3.7,5.8,0,1.9,0,0x6f8792);roofSlab(8.3,6.1,3.85,0x344b5a);
+   for(const x of [-2.7,-1.35,1.35,2.7])win(x,1.9,2.98,1.0,2.15,0x78bfd4);
+   door(0,1.3,2.1,3.02,0x334957);box(g,3.2,.5,.35,0,3.25,3.0,0xd4a84d);break;
+  case 'mall':
+   // مركز تسوق متعدد الطوابق مع واجهة زجاجية، مدخل مركزي وسلالم جانبية
+   box(g,8.7,4.5,6.2,0,2.3,0,0xd6dfe2);box(g,8.9,.35,6.4,0,4.65,0,0x566b79);
+   for(const y of [1.25,2.65,3.9])for(const x of [-3,-1.5,1.5,3])win(x,y,3.16,1.1,.8,0x79bfd8);
+   door(0,2.0,2.3,3.25,0x435967);box(g,2.5,.18,1.2,-2.8,.1,3.7,0x9b9b9b);box(g,2.5,.18,1.2,2.8,.1,3.7,0x9b9b9b);break;
+  case 'aquarium':
+   // أكواريوم بقبة زجاجية وحوض بانورامي
+   box(g,7.8,3.3,5.8,0,1.7,0,0x277f9b);roofSlab(8.1,6.1,3.4,0x245a73);
+   for(const x of [-2.5,0,2.5]){box(g,2.0,2.0,.18,x,1.7,2.98,0x78cce0);for(let i=0;i<3;i++){const fish=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),mat([0xffc857,0xff8b6b,0xe7e6a7][i]));fish.scale.set(1.5,.65,.5);fish.position.set(x-.35+i*.35,1.5+(i%2)*.45,3.12);g.add(fish)}}
+   const domeA=new THREE.Mesh(new THREE.SphereGeometry(2.2,16,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0x8bd6e8,transparent:true,opacity:.65,roughness:.25}));domeA.position.set(0,3.35,0);g.add(domeA);break;
+  case 'clinic':
+   box(g,6.8,3.1,5.3,0,1.6,0,0xe6eeee);roofSlab(7.1,5.6,3.2,0x93b7bd);
+   for(const x of [-2.2,2.2])win(x,1.9,2.75,1.2,1.2,0x83c8d8);door(0,1.1,2,2.85,0x5d7378);
+   box(g,1.2,.32,.22,0,3.65,2.8,0xd64b4b);box(g,.32,1.2,.22,0,3.65,2.8,0xffffff);break;
+  default:
+   box(g,7.8,3.3,5.5,0,1.8,0,b.color);roofSlab(8.1,5.8,3.45,0x596b78);
+   win(-2.4,1.8,2.85,1.15,1.25);win(2.4,1.8,2.85,1.15,1.25);door();
+ }
+}
+function buildCity(){
+ // شبكة شوارع تربط الأحياء، مع خطوط وسطية متقطعة
+ for(let i=0;i<COLS-1;i++){
+  const q=(i+.5)*GAP;makeRoad(q,mid,2.25,100);makeRoad(mid,q,100,2.25);
+  for(let z=-35;z<100;z+=7)box(scene,.10,.055,2.4,q,.06,z,0xe8e8d8);
+  for(let x=-35;x<100;x+=7)box(scene,2.4,.055,.10,x,.06,q,0xe8e8d8);
+ }
+ // طريق رئيسي أمام مباني الوظائف وممرات الوصول
+ makeRoad(mid,-6.2,86,2.8);
+ for(const b of WORKPLACE_BUILDINGS){
+  const g=new THREE.Group();g.position.set(b.x,0,b.z);
+  box(g,9,.18,7.2,0,.12,0,0x777f87);
+  addBuildingDesign(g,b);
+  const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d');
+  ctx.fillStyle='rgba(22,38,55,.92)';ctx.fillRect(0,0,512,128);ctx.fillStyle='#fff';ctx.font='bold 48px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(b.icon+' '+b.name,256,64);
+  const tex=new THREE.CanvasTexture(c);const sign=new THREE.Mesh(new THREE.PlaneGeometry(7.2,1.8),new THREE.MeshBasicMaterial({map:tex,transparent:true}));sign.position.set(0,(b.key==='company'?6.0:4.7),2.95);g.add(sign);
+  // مدخل مضاء
+  for(const sx of [-3.3,3.3]){const lamp=new THREE.Mesh(gSph,mat(0xffe082));lamp.scale.set(.18,.18,.18);lamp.position.set(sx,3.25,2.9);g.add(lamp)}
+  scene.add(g);
+  // شخصية موظف تتجه إلى المبنى ثم تعود عبر الشارع
+  const npc=new THREE.Group();const body=new THREE.Mesh(new THREE.CylinderGeometry(.25,.3,.78,7),mat([0x3b82f6,0x16a085,0xd97706,0x64748b,0x1d4ed8,0x788b45][cityActors.npcs.length]));body.position.y=.72;npc.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.23,8,6),mat(0xf0c9a5));head.position.y=1.28;npc.add(head);
+  const leg1=new THREE.Mesh(new THREE.BoxGeometry(.13,.42,.16),mat(0x30343b));leg1.position.set(-.11,.2,0);npc.add(leg1);
+  const leg2=leg1.clone();leg2.position.x=.11;npc.add(leg2);
+  const homeZ=b.z+4.3;npc.position.set(b.x,0,homeZ);scene.add(npc);
+  cityActors.npcs.push({g:npc,homeZ,targetZ:b.z+3.2,dir:-1,speed:1.05+cityActors.npcs.length*.04,legs:[leg1,leg2]});
+ }
+ // شاطئ البحر: مياه زرقاء ورمال ومظلات
+ // تفاصيل الشاطئ وساحة التدريب مدمجة ضمن مبانيهما المخصصة على الخريطة
+ // سيارات مدنية تتحرك على الشوارع الأفقية
+ for(let i=0;i<4;i++){
+  const g=new THREE.Group();const colors=[0xc0392b,0x2874a6,0xf1c40f,0x34495e];
+  box(g,2.1,.55,1.05,0,.55,0,colors[i]);box(g,1.05,.48,.9,-.12,1.02,0,0x9ed8ef);
+  for(const x of [-.68,.68])for(const z of [-.55,.55]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.16,8),mat(0x171717));w.rotation.z=Math.PI/2;w.position.set(x,.28,z);g.add(w)}
+  g.position.set(-12+i*18,.0,4.5+(i%2)*9);scene.add(g);cityActors.cars.push({g,speed:i%2?5.2:-4.5});
+ }
+}
+function animateCity(dt){
+ for(const n of cityActors.npcs){n.g.position.z+=n.dir*n.speed*dt;if(n.g.position.z<n.targetZ){n.dir=1;n.g.rotation.y=Math.PI}else if(n.g.position.z>n.homeZ){n.dir=-1;n.g.rotation.y=0}const swing=Math.sin(performance.now()*.012*n.speed)*.22;n.legs[0].rotation.x=swing;n.legs[1].rotation.x=-swing;}
+ for(const c of cityActors.cars){c.g.position.x+=c.speed*dt;if(c.g.position.x>82)c.g.position.x=-12;if(c.g.position.x< -13)c.g.position.x=82;}
+}
+buildCity();
+const okName=n=>typeof n==="string"&&(/^[A-Za-z0-9._]{1,30}$/.test(n)||n===OWNER_PUBLIC);
+const houses={};
+function buildHouse(id,d){
+  if(houses[id])scene.remove(houses[id].g);
+  const g=new THREE.Group(),p=plotPos(d.plot),h=d.house,hu=hue(id)/360;
+  g.position.set(p.x,0,p.z);
+  const wall=new THREE.Color().setHSL(hu,.4,.84).getHex(),dark=new THREE.Color().setHSL(hu,.35,.62).getHex();
+  const rc=h>=6?0xd4a017:new THREE.Color().setHSL((hu+.02)%1,.45,.38).getHex();
+  box(g,6.6,.1,6.6,0,.05,0,0x4f6b4a);
+  box(g,6.2,.12,6.2,0,.06,0,id===me?0x8fd18f:0x7fbf72);
+  box(g,.9,.14,2.4,0,.07,1.9,0xd9cfba);
+  const fl=h>=4?2:1,fh=fl*1.3,w=h>=4?3.4:2.8,z0=-.6;
+  box(g,w,fh,2.6,0,fh/2+.12,z0,wall);
+  roof(g,w+.5,3.0,fh+.12,0,z0,rc);
+  box(g,.6,1,.08,0,.62,z0+1.34,0x6b4426);
+  for(let f=0;f<fl;f++)for(const sx of[-1,1])box(g,.5,.5,.08,sx*(w/2-.6),.92+f*1.3,z0+1.34,0x9ad4f0);
+  if(fl>1)box(g,.5,.5,.08,0,.92+1.3,z0+1.34,0x9ad4f0);
+  if(h>=2){box(g,.35,1,.35,w/2-.5,fh+.8,z0-.7,0xa05a48);
+    for(const[fx,fz,fw,fd]of[[0,-3.05,6.2,.1],[-3.05,0,.1,6.2],[3.05,0,.1,6.2],[-2.05,3.05,2,.1],[2.05,3.05,2,.1]])box(g,fw,.35,fd,fx,.3,fz,0xf5f5f5)}
+  tree(g,-2.5,-2.4,1);tree(g,2.5,-2.4,1.1);
+  if(h>=3){box(g,1.3,1,1.8,-(w/2+.75),.62,z0+.3,dark);roof(g,1.7,2.2,1.12,-(w/2+.75),z0+.3,rc);
+    box(g,.7,.3,1.2,-1.9,.3,2.2,0xc0392b);box(g,.6,.25,.6,-1.9,.55,2.2,0x9ad4f0);tree(g,-2.6,2.2,.8)}
+  if(h>=4){box(g,1.7,.1,.7,0,1.3+.17,z0+1.65,0xe8e0d0);box(g,1.7,.3,.05,0,1.3+.35,z0+1.98,0xffffff)}
+  if(h>=5){box(g,1.9,.05,1.4,2,.1,2.1,0xeeeeee);box(g,1.6,.08,1.1,2,.12,2.1,0x4fc3f7);tree(g,2.6,.8,.9)}
+  if(h>=6){box(g,1,fh+1.3,1,w/2+.3,(fh+1.3)/2+.12,z0-1,wall);roof(g,1.5,1.5,fh+1.42,w/2+.3,z0-1,0xd4a017);
+    for(const sx of[-.75,.75]){box(g,.3,1.1,.3,sx,.67,3.05,0xcccccc);const m=new THREE.Mesh(gSph,mat(0xffd54a));m.scale.set(.3,.3,.3);m.position.set(sx,1.35,3.05);g.add(m)}}
+  if(okName(d.insta)){const jobName=JOBS[d.activeJob]?.name||"بدون وظيفة";const l=label(d.insta,jobName);l.position.set(0,fh+(h>=6?3:2.5),z0);g.add(l)}
+  scene.add(g);houses[id]={g,key:d.plot+"_"+h+"_"+d.insta+"_"+(d.activeJob||"")};
+}
+function syncHouses(){
+  for(const id in players){const d=id===me&&S?S:players[id];if(!houses[id]||houses[id].key!==d.plot+"_"+d.house+"_"+d.insta+"_"+(d.activeJob||""))buildHouse(id,d)}
+  $("tot").textContent=Object.keys(players).length;
+}
+function avatar(c,n){
+  const g=new THREE.Group();
+  const b=new THREE.Mesh(new THREE.CylinderGeometry(.35,.4,1,8),mat(c));b.position.y=.5;g.add(b);
+  const h=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),mat(0xf2c9a0));h.position.y=1.25;g.add(h);
+  if(okName(n)){const l=label(n);l.position.y=2.1;g.add(l)}
+  scene.add(g);return g;
+}
+let myAv=null,target=null;const peerAv={};
+
+// ---------- life systems: family, marriage, cars and public profiles ----------
+const CAR_TYPES=[
+ {name:"سيارة صغيرة 🚗",price:2500},{name:"سيارة عائلية 🚙",price:6500},{name:"سيارة رياضية 🏎️",price:15000},{name:"سيارة فاخرة 🚘",price:35000},{name:"سيارة VIP 👑",price:70000}
+];
+const NPC_WOMEN=[
+ {name:"ليان",dowry:1800,house:2,car:1,job:1},{name:"جنى",dowry:4200,house:3,car:2,job:3},{name:"تالا",dowry:8000,house:4,car:3,job:5},{name:"نور",dowry:1200,house:1,car:0,job:1},{name:"سارة",dowry:12000,house:5,car:4,job:7},{name:"ريم",dowry:5500,house:3,car:3,job:4}
+];
+const NPC_MEN=[
+ {name:"آدم",dowry:0,house:2,car:1,job:1},{name:"يزن",dowry:0,house:3,car:2,job:3},{name:"كريم",dowry:0,house:4,car:3,job:5},{name:"رامي",dowry:0,house:1,car:0,job:1},{name:"سيف",dowry:0,house:5,car:4,job:7},{name:"عمر",dowry:0,house:3,car:3,job:4}
+];
+const randomNames=["محمد","أحمد","خالد","مريم","هبة","دانا","علي","سلمى","رنا","يوسف"];
+function ensureLife(){
+ if(!S.family){dirty=true;const count=Math.floor(Math.random()*11);S.family=[{name:"الأم",role:"الأم",type:"parent",gender:"female",love:65},{name:"الأب",role:"الأب",type:"parent",gender:"male",love:65}];const boys=["محمد","أحمد","خالد","علي","يوسف","عمر","يزن","آدم","كريم","سيف"];const girls=["مريم","هبة","دانا","سلمى","رنا","ليان","جنى","تالا","نور","ريم"];for(let i=0;i<count;i++){const sister=Math.random()<.5;const name=(sister?girls:boys)[Math.floor(Math.random()*(sister?girls:boys).length)];const member={name,role:sister?"أخت":"أخ",type:"sibling",gender:sister?"female":"male",love:55};if(Math.random()<.3){member.jobKey=JOB_KEYS[Math.floor(Math.random()*JOB_KEYS.length)];member.jobLevel=1+Math.floor(Math.random()*4)}S.family.push(member)}}
+ S.family.forEach(m=>{m.love=Number.isFinite(m.love)?m.love:60;m.mood=m.mood||"عادي";m.cash=Number.isFinite(m.cash)?m.cash:(m.jobKey?500+Math.floor(Math.random()*1500):100+Math.floor(Math.random()*300));if(m.role==="أخ")m.gender="male";if(m.role==="أخت")m.gender="female"});
+ S.familyEvents=S.familyEvents||[];S.homeGuestsOut=S.homeGuestsOut||{};
+ S.children=S.children||[];S.children.forEach(c=>{c.ageYears=Number(c.ageYears)||0;if(c.ageDays&&!c.ageYears)c.ageYears=Math.floor(c.ageDays/365);c.lastAgeAt=Number(c.lastAgeAt)||Date.now();c.love=Number(c.love)||60});S.car=S.car||null;S.spouse=S.spouse||null;S.married=S.married||false;
+ if(S.spouse){S.spouse.love=Number(S.spouse.love)||70;S.spouse.workRequests=Number(S.spouse.workRequests)||0;S.spouse.cash=Number.isFinite(S.spouse.cash)?S.spouse.cash:(S.spouse.jobKey?900+Math.floor(Math.random()*1800):200);}
+}
+function carLevel(){return S.car?Math.max(1,Math.min(10,Number(S.car.level)||1)):0}
+function effectiveWorkMinutes(base){return Math.max(1,base-Math.max(0,carLevel()-1))}
+function lifePanel(title,html){const el=$("lifePanel");el.innerHTML='<button id="lifeClose" style="float:left;flex:none">إغلاق ✕</button><h3>'+title+'</h3>'+html;el.style.display="block";$("lifeClose").onclick=()=>el.style.display="none";}
+function budgetPay(cost,reason){cost=Math.max(0,Math.round(cost));if(owner)return true;if((Number(S.money)||0)<cost){toast("❌ ميزانيتك ما بتكفي! تحتاج $"+fmt(cost)+" والمتوفر $"+fmt(S.money)+".");return false}S.money-=cost;S.spent=(S.spent||0)+cost;log(reason,-cost);dirty=true;hud();return true}
+function familyMood(m,delta){m.love=Math.max(0,Math.min(100,(m.love||50)+delta));m.mood=m.love>=80?"سعيد جداً":m.love>=60?"سعيد":m.love>=40?"عادي":m.love>=20?"حزين":"زعلان";}
+function chooseGender(){const html='<div class="lifeCard">اختاري جنس شخصيتك. سيحدد ذلك قائمة المرشحين للزواج.</div><button id="genderF">أنثى 👩</button><button id="genderM">ذكر 👨</button>';lifePanel("اختيار الشخصية",html);$("genderF").onclick=()=>{S.gender="female";S.genderChosen=true;dirty=true;lifePanel("تم الاختيار","<div class='lifeCard'>تم اختيار شخصية أنثى.</div>")};$("genderM").onclick=()=>{S.gender="male";S.genderChosen=true;dirty=true;lifePanel("تم الاختيار","<div class='lifeCard'>تم اختيار شخصية ذكر.</div>")};}
+const FAMILY_DESTINATIONS=[
+ {key:"hospital",name:"المستشفى",icon:"🏥",price:12,walk:12},{key:"teacher",name:"المدرسة",icon:"🏫",price:8,walk:10},
+ {key:"training",name:"ساحة تدريب الجنود",icon:"🪖",price:18,walk:16},{key:"restaurant",name:"المطعم",icon:"🍽️",price:35,walk:12},
+ {key:"amusement",name:"مدينة الملاهي",icon:"🎡",price:65,walk:20},{key:"beach",name:"شاطئ البحر",icon:"🏖️",price:45,walk:22},
+ {key:"company",name:"مقر الشركة",icon:"🏢",price:10,walk:13},{key:"postal",name:"مكتب البريد",icon:"📮",price:7,walk:9},
+ {key:"bank",name:"البنك",icon:"🏦",price:8,walk:10},{key:"fire",name:"مركز الإطفاء",icon:"🚒",price:14,walk:14},
+ {key:"market",name:"السوق والمتاجر",icon:"🛒",price:28,walk:12},{key:"park",name:"الحديقة العامة",icon:"🌳",price:15,walk:10},
+ {key:"cinema",name:"السينما",icon:"🎬",price:50,walk:15},{key:"library",name:"المكتبة",icon:"📚",price:9,walk:10},
+ {key:"police",name:"مركز الشرطة",icon:"👮",price:10,walk:13},{key:"soldier",name:"مركز الجيش",icon:"🎖️",price:18,walk:16},
+ {key:"cleaner",name:"مركز النظافة",icon:"🧹",price:6,walk:11},{key:"cafe",name:"المقهى",icon:"☕",price:24,walk:9},
+ {key:"gym",name:"النادي الرياضي",icon:"🏋️",price:30,walk:14},{key:"mall",name:"المول",icon:"🛍️",price:55,walk:18},
+ {key:"clinic",name:"العيادة",icon:"🩺",price:20,walk:12},{key:"playground",name:"مدينة ألعاب الأطفال",icon:"🛝",price:32,walk:13},
+ {key:"aquarium",name:"الأكواريوم",icon:"🐠",price:48,walk:17},{key:"museum",name:"المتحف",icon:"🏛️",price:26,walk:14}
+];
+function familyPanel(){
+ ensureLife();lifeTick();
+ let members=S.family.map((m,i)=>'<div class="lifeCard"><b>'+escapeText(m.role)+' — '+escapeText(m.name)+'</b><br>'+(m.deceased?'🕊️ متوفى ضمن أحداث القصة':(m.married?'💍 متزوج/ة من '+escapeText(m.spouseName||'شخص آخر')+'<br>':''))+'<br>نظرته لك: '+escapeText(m.mood)+' ❤️ '+m.love+'/100'+(m.jobKey?'<br>العمل: '+escapeText(JOBS[m.jobKey]?.name||"موظف")+' · مستوى '+(m.jobLevel||1):'<br>لا يعمل حالياً')+(m.deceased?'':'<br><button data-talk="'+i+'">تحدث معه 💬</button><button data-ask="'+i+'">اطلب منه مالاً 💵</button><button data-request="'+i+'">طلب منه 📩</button><button data-work="'+i+'">اطلب منه العمل 💼</button>')+'</div>').join('');
+ const spouse=S.spouse?'<div class="lifeCard">💍 <b>'+escapeText(S.spouse.name)+' — '+(S.gender==="female"?"الزوج":"الزوجة")+'</b><br>نظرته لك: '+escapeText(S.spouse.mood||"سعيد")+' ❤️ '+S.spouse.love+'/100<br>العمل: '+(S.spouse.jobKey?escapeText(JOBS[S.spouse.jobKey]?.name||"موظف/ة")+" — المستوى "+(S.spouse.jobLevel||1):"لا يعمل حالياً")+'<br><button id="spouseTalk">حوار رومانسي 💗</button><button id="spouseAsk">اطلب منه/منها مالاً 💵</button><button id="spouseRequest">طلب من الشريك 📩</button><button id="spouseWork">اطلب منه/منها التوظف 💼</button></div>':'<div class="lifeCard">لم تتزوج بعد. <button id="openMarriage">اختيار شريك الزواج 💍</button></div>';
+ const kids=S.children.length?S.children.map((c,i)=>'<div class="lifeCard">👶 <b>'+escapeText(c.name)+'</b> · '+(c.gender==="male"?"ولد":"بنت")+'<br>العمر: '+c.ageYears+' سنوات (كل يوم حقيقي يزيد سنة)<br>المحبة: '+c.love+'/100'+(c.ageYears>=3?'<br>بدأت طلباته المناسبة لعمره.<br><button data-child-request="'+i+'">شوف طلب الطفل 🧸</button>':'<br>لسه صغير، طلباته بتبدأ بعمر 3 سنوات.')+'<br><button data-room-request="'+i+'">طلب غرفة خاصة 🛏️</button>'+'</div>').join(''):'لا يوجد أبناء حالياً.';
+ lifePanel("❤️ عائلتي",'<div class="lifeCard"><b>🎭 أحداث العائلة</b><br>أحداث مفاجئة تغيّر حياة العائلة مع الوقت.<br><button id="familyEventBtn">حدث عائلي مفاجئ 🎲</button>'+((S.familyEvents||[]).length?'<div class="muted"><b>سجل الأحداث:</b><br>'+S.familyEvents.slice(0,5).map(e=>escapeText(e.text)).join('<br>')+'</div>':'')+'</div>'+spouse+'<div class="lifeCard"><b>👶 الحمل والإنجاب</b><br>'+(S.pregnancy?"يوجد حمل جارٍ، بقي تقريباً "+Math.max(0,Math.ceil((S.pregnancy.endsAt-Date.now())/60000))+" دقيقة.":"لا يوجد حمل حالياً.")+(S.spouse?'<button id="haveChild">بدء الحمل (ساعة واحدة) 🤰</button>':'')+'</div><div class="lifeCard"><b>الأبناء</b><br>'+kids+'</div><div class="lifeCard"><b>👨‍👩‍👧‍👦 رحلات العائلة حول المدينة</b><br>اختاروا أي مبنى أو مكان في المدينة. كل مكان له سعر مختلف، والوجهات الأغلى ترفع سعادة أفراد العائلة أكثر. السيارة أسرع وتحتاج بنزين.<div class="muted">اختاروا الوجهة لعرض التكلفة وتحديد أفراد الرحلة.</div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px">'+FAMILY_DESTINATIONS.map(d=>'<button data-trip="'+d.key+'" style="font-size:13px;padding:10px">'+d.icon+' '+d.name+'<small style="display:block;font-size:11px">$'+fmt(d.price)+' للفرد</small></button>').join('')+'</div></div><div class="lifeCard"><b>مصاريف العائلة</b><br><button id="familyExpense">دفع مصروف عائلي 💵</button></div><h4>أفراد عائلتك</h4>'+members);
+ const evb=$("familyEventBtn");if(evb)evb.onclick=triggerFamilyEvent;
+ const om=$("openMarriage");if(om)om.onclick=marriagePanel;const st=$("spouseTalk");if(st)st.onclick=spouseRomance;const sa=$("spouseAsk");if(sa)sa.onclick=()=>requestMoneyFrom(S.spouse,"الشريك");const sr=$("spouseRequest");if(sr)sr.onclick=()=>familyRequestCustom(S.spouse.name,"الشريك");const sw=$("spouseWork");if(sw)sw.onclick=askSpouseToWork;const fe=$("familyExpense");if(fe)fe.onclick=()=>{const cost=150+Math.floor(Math.random()*851);if(!budgetPay(cost,"مصاريف العائلة"))return;toast("تم دفع مصاريف العائلة ❤️");familyPanel()};
+ $("lifePanel").querySelectorAll('[data-talk]').forEach(b=>b.onclick=()=>familyTalk(Number(b.dataset.talk)));$("lifePanel").querySelectorAll('[data-ask]').forEach(b=>b.onclick=()=>requestMoneyFrom(S.family[Number(b.dataset.ask)],S.family[Number(b.dataset.ask)].role));$("lifePanel").querySelectorAll('[data-request]').forEach(b=>b.onclick=()=>familyRequest(Number(b.dataset.request)));$("lifePanel").querySelectorAll('[data-work]').forEach(b=>b.onclick=()=>askNpcToWork(Number(b.dataset.work)));$("lifePanel").querySelectorAll('[data-trip]').forEach(b=>b.onclick=()=>familyTrip(b.dataset.trip));$("lifePanel").querySelectorAll('[data-child-request]').forEach(b=>b.onclick=()=>childRequest(Number(b.dataset.childRequest)));
+ $("lifePanel").querySelectorAll('[data-room-request]').forEach(b=>b.onclick=()=>childRoomRequest(Number(b.dataset.roomRequest)));
+ const hc=$("haveChild");if(hc)hc.onclick=()=>{if(S.pregnancy){toast("في حمل جارٍ بالفعل.");return}S.pregnancy={startedAt:Date.now(),endsAt:Date.now()+3600000};dirty=true;toast("🤰 بدأ الحمل! الولادة بعد ساعة كاملة.");familyPanel()};
+}
+function homeMemberList(){
+ const list=[];
+ (S.family||[]).forEach((m,i)=>{if(!m.deceased)list.push({name:m.name,role:m.role,gender:m.gender,jobKey:m.jobKey,kind:"family",ref:m,key:"family_"+i})});
+ if(S.spouse&&!S.spouse.deceased)list.push({name:S.spouse.name,role:S.gender==="female"?"الزوج":"الزوجة",gender:S.gender==="female"?"male":"female",jobKey:S.spouse.jobKey,kind:"spouse",ref:S.spouse,key:"spouse"});
+ (S.children||[]).forEach((c,i)=>list.push({name:c.name,role:c.ageYears>=6?"طالب/ة":"طفل/ة",gender:c.gender,ageYears:c.ageYears,kind:"child",ref:c,key:"child_"+i}));
+ return list;
+}
+function homeIsAway(m){
+ if(S.homeGuestsOut&&S.homeGuestsOut[m.key])return true;
+ const hour=new Date().getHours();
+ if(m.kind==="child")return (m.ageYears||0)>=6&&hour>=7&&hour<14;
+ return !!m.jobKey&&hour>=8&&hour<16;
+}
+function furnitureData(){
+ S.homeFurniture=S.homeFurniture||{};
+ const defs=[
+  {key:"sofa",name:"الكنبة",icon:"🛋️",levels:["كنبة بسيطة","كنبة مريحة","كنبة عائلية","كنبة فاخرة","كنبة ملكية"],cost:250},
+  {key:"bed",name:"السرير",icon:"🛏️",levels:["سرير بسيط","سرير خشبي","سرير مريح","سرير فاخر","سرير ملكي"],cost:300},
+  {key:"tv",name:"التلفزيون",icon:"📺",levels:["تلفزيون صغير","شاشة مسطحة","شاشة كبيرة","شاشة ذكية","سينما منزلية"],cost:350},
+  {key:"kitchen",name:"المطبخ",icon:"🍳",levels:["مطبخ أساسي","مطبخ مرتب","مطبخ حديث","مطبخ فاخر","مطبخ احترافي"],cost:400},
+  {key:"table",name:"طاولة الطعام",icon:"🍽️",levels:["طاولة صغيرة","طاولة عائلية","طاولة خشبية","طاولة فاخرة","طاولة ملكية"],cost:200}
+ ];
+ defs.forEach(d=>{S.homeFurniture[d.key]=Math.max(1,Math.min(5,Number(S.homeFurniture[d.key])||1))});
+ return defs;
+}
+function homePanel(){
+ ensureLife();lifeTick();
+ const panel=$("homePanel");
+ const people=homeMemberList();
+ const atHome=people.filter(m=>!homeIsAway(m)),away=people.filter(homeIsAway);
+ const icons={male:"👨",female:"👩"};
+ const peopleHtml=atHome.length?atHome.map(m=>'<div class="homePerson"><div class="personName">'+escapeText(m.name)+'</div><div class="face">'+(m.kind==="child"?(m.gender==="male"?"👦":"👧"):(icons[m.gender]||"🧑"))+'</div><div class="personState">في المنزل 🏡</div><button data-ask-out="'+m.key+'">اطلب منه الخروج 🚪</button><button data-kick-out="'+m.key+'" style="background:#c0392b">إخراجه من البيت</button></div>').join(''):'<div class="lifeCard">المنزل هادئ حالياً، كل أفراد العائلة خارج المنزل أو لا يوجد أفراد مضافون.</div>';
+ const awayHtml=away.length?'<div class="lifeCard"><b>خارج المنزل حالياً</b><br>'+away.map(m=>escapeText(m.name)+' — '+(S.homeGuestsOut&&S.homeGuestsOut[m.key]?'تم إخراجه من المنزل 🚪':(m.kind==="child"?'في المدرسة 🏫':'في العمل 💼'))+' <button data-bring-home="'+m.key+'">إرجاع للبيت</button>').join('<br>')+'</div>':'';
+ const defs=furnitureData();
+ const furnitureHtml=defs.map(d=>{const lv=S.homeFurniture[d.key],cost=d.cost*lv,art=d.key==="sofa"?(lv>=5?"🛋️👑":lv>=3?"🛋️✨":d.icon):d.key==="bed"?(lv>=5?"🛏️👑":lv>=3?"🛏️✨":d.icon):d.key==="tv"?(lv>=5?"📽️✨":lv>=3?"📺✨":d.icon):d.key==="kitchen"?(lv>=5?"🍳✨👑":lv>=3?"🍳✨":d.icon):d.key==="table"?(lv>=5?"🍽️👑":lv>=3?"🍽️✨":d.icon):d.icon;return '<div class="lifeCard"><div class="fIcon">'+art+'</div><b>'+d.name+'</b><br>'+escapeText(d.levels[lv-1])+' · المستوى '+lv+'/5<br>'+(lv<5?'التطوير التالي: $'+fmt(cost):'وصل لأعلى مستوى ⭐')+'<br><button data-furn="'+d.key+'" '+(lv>=5?'disabled':'')+'>طوّر الأثاث ⬆️</button></div>'}).join('');
+ let planHtml='';
+ if(S.children.length){
+  if(S.roomPlan){
+   let groups=[];const kids=S.children;
+   if(S.roomPlan.mode==="solo")groups=kids.map(c=>({title:"غرفة "+c.name,names:[c.name]}));
+   else if(S.roomPlan.mode==="shared")groups=[{title:"غرفة الأبناء المشتركة",names:kids.map(c=>c.name)}];
+   else {const girls=kids.filter(c=>c.gender==="female"),boys=kids.filter(c=>c.gender==="male");if(girls.length)groups.push({title:"غرفة البنات",names:girls.map(c=>c.name)});if(boys.length)groups.push({title:"غرفة الأولاد",names:boys.map(c=>c.name)});}
+   planHtml='<div class="roomPlan"><b>🛏️ توزيع غرف الأبناء</b><br>'+groups.map(g=>'🏠 '+escapeText(g.title)+': '+g.names.map(escapeText).join('، ')).join('<br>')+'<br><button id="changeRoomPlan">تغيير توزيع الغرف</button></div>';
+  }else planHtml='<div class="roomPlan"><b>🧒 طلب الأبناء:</b><br>«ماما/بابا، بدنا ترتب لنا غرف النوم!»<br><button id="answerRoomPlan">اختيار توزيع الغرف 🛏️</button></div>';
+ }else planHtml='<div class="roomPlan">لا يوجد أبناء حالياً. عند إنجاب أطفال سيظهر طلب ترتيب غرفهم هنا.</div>';
+ panel.innerHTML='<button id="homeClose" style="float:left;flex:none">إغلاق ✕</button><h3>🏡 منزلي من الداخل</h3><div class="homeRoom"><div class="homeRoomTitle">غرفة المعيشة — عالم ZX</div><div class="roomDecor">🪟　'+(S.homeFurniture.sofa>=4?'🛋️✨':'🛋️')+'　🪴</div><div class="homePeople">'+peopleHtml+'</div><div class="roomDecor">'+(S.homeFurniture.tv>=4?'📽️':'📺')+'　🪑　🪴</div></div><div class="homeRoom" style="min-height:115px"><div class="homeRoomTitle">غرفة النوم</div><div class="roomDecor">'+(S.homeFurniture.bed>=4?'🛏️👑':'🛏️')+'　🧸　🪟</div></div><div class="homeRoom" style="min-height:115px"><div class="homeRoomTitle">المطبخ وغرفة الطعام</div><div class="roomDecor">'+(S.homeFurniture.kitchen>=4?'🍳✨':'🍳')+'　'+(S.homeFurniture.table>=4?'🍽️👑':'🍽️')+'　🧊</div></div>'+awayHtml+planHtml+'<h4>🪑 تطوير أثاث المنزل</h4><div class="homeFurniture">'+furnitureHtml+'</div>';
+ panel.style.display="block";
+ $("homeClose").onclick=()=>panel.style.display="none";
+ const rp=$("answerRoomPlan");if(rp)rp.onclick=()=>{panel.style.display="none";childRoomRequest(0)};
+ const cr=$("changeRoomPlan");if(cr)cr.onclick=()=>{panel.style.display="none";childRoomRequest(0)};
+ panel.querySelectorAll('[data-furn]').forEach(b=>b.onclick=()=>upgradeFurniture(b.dataset.furn));
+ panel.querySelectorAll('[data-ask-out]').forEach(b=>b.onclick=()=>homeMemberExit(b.dataset.askOut,false));
+ panel.querySelectorAll('[data-kick-out]').forEach(b=>b.onclick=()=>homeMemberExit(b.dataset.kickOut,true));
+ panel.querySelectorAll('[data-bring-home]').forEach(b=>b.onclick=()=>{delete S.homeGuestsOut[b.dataset.bringHome];dirty=true;toast('عاد فرد العائلة إلى البيت 🏡');homePanel()});
+}
+function childRoomRequest(i){
+ if(!S.children||!S.children.length){toast("ما في أبناء يحتاجوا غرف حالياً.");return}
+ const kids=S.children, c=kids[Math.max(0,Math.min(kids.length-1,i))];
+ if(kids.length===1){
+  const cost=250;lifePanel("🛏️ طلب غرفة خاصة",'<div class="lifeCard">'+escapeText(c.name)+': «ماما/بابا، بدي غرفة لحالي!»</div><div class="lifeCard">ابنك/بنتك الوحيد/ة يطلب غرفة نوم خاصة به. التكلفة: $'+fmt(cost)+'</div><button id="onlyChildRoom">الموافقة وتجهيز غرفته 🏡</button><button id="cancelOnlyRoom">لاحقاً</button>');
+  $("onlyChildRoom").onclick=()=>{if(!budgetPay(cost,"تجهيز غرفة خاصة لـ "+c.name))return;S.roomPlan={mode:"solo",updatedAt:Date.now()};dirty=true;toast("تم تجهيز غرفة خاصة لـ "+c.name+" 🛏️");homePanel()};$("cancelOnlyRoom").onclick=homePanel;return;
+ }
+ const html='<div class="lifeCard">'+escapeText(c.name)+': «ماما/بابا، بدنا غرف نوم إلنا!»</div><div class="lifeCard"><b>اختاروا توزيع غرف الأبناء ('+kids.length+' أبناء):</b><br><button id="roomSolo">نعم، كل واحد بغرفة لحاله — $'+fmt(kids.length*250)+'</button><br><button id="roomShared">لا، كلكم مع بعض بغرفة واحدة — $250</button><br><button id="roomGender">البنات لحال والأولاد لحال — $500</button></div>';
+ lifePanel("🛏️ طلب غرف الأبناء",html);
+ const apply=mode=>{const cost=mode==="solo"?kids.length*250:mode==="shared"?250:500;if(!budgetPay(cost,"تجهيز غرف الأبناء"))return;S.roomPlan={mode,updatedAt:Date.now()};dirty=true;toast("🏡 تم تجهيز غرف الأبناء حسب اختيارك!");homePanel()};
+ $("roomSolo").onclick=()=>apply("solo");$("roomShared").onclick=()=>apply("shared");$("roomGender").onclick=()=>apply("gender");
+}
+function homeMemberExit(key,force){
+ const member=homeMemberList().find(x=>x.key===key);if(!member)return;
+ if(!force){const agrees=Math.random()<.8;if(!agrees){toast(member.name+' قال: «بدي أضل بالبيت شوي»');return}}
+ S.homeGuestsOut=S.homeGuestsOut||{};S.homeGuestsOut[key]={at:Date.now(),forced:!!force};dirty=true;
+ toast(force?'تم إخراج '+member.name+' من البيت 🚪':member.name+' وافق وطلع من البيت 🚪');homePanel();
+}
+function triggerFamilyEvent(){
+ ensureLife();const siblings=S.family.filter(m=>(m.role==="أخ"||m.role==="أخت")&&!m.married&&!m.deceased);
+ const father=S.family.find(m=>m.role==="الأب"&&!m.deceased);
+ const choices=[];if(siblings.length)choices.push("wedding");if(father)choices.push("father");choices.push("party","job");
+ const type=choices[Math.floor(Math.random()*choices.length)];let message="";
+ if(type==="wedding"){
+  const m=siblings[Math.floor(Math.random()*siblings.length)];m.married=true;m.spouseName=randomNames[Math.floor(Math.random()*randomNames.length)];message="💍 خبر سعيد! "+m.role+"ك "+m.name+" تزوّج/ت اليوم من "+m.spouseName+"!";
+ }else if(type==="father"){
+  father.deceased=true;father.deceasedAt=Date.now();message="🕊️ حدث عائلي مؤثر: توفي الأب داخل قصة اللعبة. ستبقى ذكراه ضمن سجل العائلة.";
+ }else if(type==="job"){
+  const candidates=S.family.filter(m=>!m.deceased&&!m.jobKey);if(candidates.length){const m=candidates[Math.floor(Math.random()*candidates.length)];const k=JOB_KEYS[Math.floor(Math.random()*JOB_KEYS.length)];m.jobKey=k;m.jobLevel=1;message="🎉 خبر جديد! "+m.name+" حصل على وظيفة في "+JOBS[k].name+"."}else message="🎊 العائلة قررت تعمل احتفالاً كبيراً! زادت سعادة الجميع.";
+ }else{S.family.forEach(m=>{if(!m.deceased)familyMood(m,5)});message="🎊 اجتماع عائلي جميل! زادت سعادة أفراد العائلة."}
+ S.familyEvents.unshift({text:message,at:Date.now()});S.familyEvents=S.familyEvents.slice(0,20);dirty=true;lifePanel("🎭 حدث عائلي",'<div class="lifeCard">'+escapeText(message)+'</div><button id="eventBack">العودة للعائلة ❤️</button>');$("eventBack").onclick=familyPanel;homePanelIfOpen();
+}
+function homePanelIfOpen(){if($("homePanel").style.display==="block")homePanel()}
+
+function upgradeFurniture(key){
+ const defs=furnitureData(),d=defs.find(x=>x.key===key);if(!d)return;const lv=S.homeFurniture[key]||1;if(lv>=5){toast("هذا الأثاث وصل لأعلى مستوى.");return}
+ const cost=d.cost*lv;if(!budgetPay(cost,"تطوير "+d.name))return;S.homeFurniture[key]=lv+1;dirty=true;toast("✨ تم تطوير "+d.name+" إلى المستوى "+(lv+1));homePanel();
+}
+function fatherJudgment(m){const sayings=["يا بنتي/يا ابني، لا تصرف كل اللي معك؛ خلي جزء للطوارئ.","الاحترام ما بنقص من قيمتك، والكلمة الطيبة بتفتح أبواب.","اختار أصحابك بعناية، وخلي أفعالك تسبق كلامك.","الغلط فرصة تتعلم منها، مش سبب تستسلم.","ساعد أهل بيتك، لأن العيلة سند وقت الحاجة."];lifePanel("👨‍👧 حكمة الأب",'<div class="lifeCard">الأب '+escapeText(m.name)+': «'+sayings[Math.floor(Math.random()*sayings.length)]+'»</div><button id="wisdomThanks">شكراً يا أبي ❤️</button><button id="wisdomBack">رجوع</button>');$("wisdomThanks").onclick=()=>{familyMood(m,4);familyPanel()};$("wisdomBack").onclick=familyPanel}
+function childRequest(i){const c=S.children[i];if(!c||c.ageYears<3){toast("طلبات الطفل تبدأ بعمر 3 سنوات.");return}const requests=[{line:"بابا/ماما، بدي لعبة جديدة!",cost:45},{line:"بدي أروح ألعب مع أصحابي.",cost:25},{line:"ممكن تشتريلي قصة ملونة؟",cost:18},{line:"نفسي بلبس جديد.",cost:60}];const r=requests[Math.floor(Math.random()*requests.length)];lifePanel("🧸 طلب من "+escapeText(c.name),'<div class="lifeCard">'+escapeText(c.name)+': «'+r.line+'»<br>التكلفة: $'+fmt(r.cost)+'</div><button id="childYes">لبّي طلبه ❤️</button><button id="childNo">ليس الآن</button>');$("childYes").onclick=()=>{if(!budgetPay(r.cost,"طلب الطفل "+c.name))return;c.love=Math.min(100,c.love+10);toast("فرح "+c.name+" كثيراً! ❤️");familyPanel()};$("childNo").onclick=()=>{c.love=Math.max(0,c.love-5);toast(c.name+" زعل شوي، ممكن تلبي طلبه لاحقاً.");familyPanel()}}
+function familyTrip(place){
+ const dest=FAMILY_DESTINATIONS.find(d=>d.key===place);if(!dest){toast("الوجهة غير متاحة حالياً.");return}
+ const people=[...(S.family||[]).map((m,i)=>({key:"f"+i,name:m.name,role:m.role,member:m})),...(S.spouse?[{key:"sp",name:S.spouse.name,role:"الشريك",member:S.spouse}]:[]),...(S.children||[]).map((c,i)=>({key:"c"+i,name:c.name,role:"طفل",child:c}))];
+ const gas=count=>S.car?Math.max(2,Math.ceil(count/2)*3):0;
+ const tripTime=S.car?Math.max(2,Math.ceil(dest.walk/3)):dest.walk;
+ const checkboxes=people.map(x=>'<label style="display:block;padding:5px"><input type="checkbox" class="tripPerson" value="'+x.key+'" checked> '+escapeText(x.name)+' ('+escapeText(x.role)+')</label>').join('');
+ const payers=people.filter(x=>x.member).map(x=>'<button data-trip-payer="'+x.key+'">اطلب من '+escapeText(x.name)+' يدفع 💳</button>').join('');
+ lifePanel(dest.icon+' رحلة عائلية إلى '+dest.name,'<div class="lifeCard"><b>مين رايح معك؟</b><br><label><input type="checkbox" id="tripMe" checked> شخصيتك</label>'+checkboxes+'<hr><span id="tripEstimate"></span><br><b>الإجمالي: <span id="tripTotal"></span></b><br><span id="tripJoy"></span><br>'+(S.car?'وقت السيارة: '+tripTime+' دقائق (أسرع) · البنزين محسوب ضمن التكلفة':'وقت المشي: '+dest.walk+' دقيقة')+'</div><button id="confirmTrip">يلا نروح 🎉</button><button id="cancelTrip">رجوع</button><div class="lifeCard"><b>خلي أحد أفراد العائلة يتكفل بالرحلة</b><br>'+payers+'</div>');
+ const selected=()=>[...$("lifePanel").querySelectorAll(".tripPerson:checked")].map(b=>people.find(x=>x.key===b.value)).filter(Boolean);
+ const totals=()=>{const count=($("tripMe").checked?1:0)+selected().length;const base=count*dest.price;const fuel=S.car?gas(count):0;return {count,base,fuel,total:base+fuel}};
+ const joy=()=>Math.min(25,Math.max(3,Math.round(dest.price/3)));
+ const update=()=>{const t=totals();$("tripEstimate").textContent='عدد المشاركين: '+t.count+' · تكلفة المكان: $'+fmt(t.base)+' · '+(S.car?'البنزين: $'+fmt(t.fuel):'بدون سيارة');$("tripTotal").textContent='$'+fmt(t.total);$("tripJoy").textContent='سعادة كل فرد من العائلة المشارك: +'+joy()+' ❤️ (تزيد مع سعر الوجهة)'};
+ $("lifePanel").querySelectorAll(".tripPerson").forEach(b=>b.onchange=update);$("tripMe").onchange=update;update();
+ const completeTrip=(payer)=>{const t=totals();if(!t.count){toast("اختاروا شخصاً واحداً على الأقل للرحلة.");return}if(payer){const m=payer.member;const chance=m.jobKey?.82:.35;if((Number(m.cash)||0)<t.total||Math.random()>chance){familyMood(m,-2);toast(m.name+" اعتذر عن دفع الرحلة أو لا يملك المبلغ الكافي.");familyPanel();return}m.cash-=t.total;familyMood(m,5);toast(m.name+" تكفّل بالرحلة كاملة ❤️")}else if(!budgetPay(t.total,"رحلة عائلية إلى "+dest.name))return;
+ const gain=joy();selected().forEach(x=>{if(x.member)familyMood(x.member,gain);if(x.child)x.child.love=Math.min(100,(x.child.love||60)+gain)});dirty=true;hud();toast("استمتعتم بالرحلة إلى "+dest.name+"! زادت السعادة +"+gain);familyPanel()};
+ $("confirmTrip").onclick=()=>completeTrip(null);$("cancelTrip").onclick=familyPanel;
+ $("lifePanel").querySelectorAll("[data-trip-payer]").forEach(b=>b.onclick=()=>{const x=people.find(x=>x.key===b.dataset.tripPayer);if(x)completeTrip(x)});
+}
+function lifeTick(){if(!S)return;ensureLife();const now=Date.now();let changed=false;for(const c of S.children){const days=Math.floor((now-(c.lastAgeAt||now))/86400000);if(days>0){c.ageYears=(c.ageYears||0)+days;c.lastAgeAt=(c.lastAgeAt||now)+days*86400000;changed=true}}if(S.pregnancy&&now>=S.pregnancy.endsAt){const gender=Math.random()<.5?"male":"female";const boys=["محمد","أحمد","آدم","يزن","عمر","سيف","كريم"];const girls=["ليان","جنى","تالا","نور","مريم","ريم","سلمى"];const list=gender==="male"?boys:girls;const name=list[Math.floor(Math.random()*list.length)];S.children.push({name,gender,ageYears:0,lastAgeAt:now,love:70});S.pregnancy=null;changed=true;toast("🎉 مبروووك! جاك "+(gender==="male"?"ولد":"بنت")+" اسمها/اسمه "+name+" 👶");}if(changed){dirty=true;hud()}}
+function familyRequest(i){const m=S.family[i];familyRequestCustom(m.name,m.role,m)}
+function familyRequestCustom(person,role,member){const requests=role==="الأم"?["ممكن تعطيني مصروفاً يا حبيبي؟","بحتاج مبلغاً لأغراض البيت."]:role==="الأب"?["محتاج مساعدة بمصاريف هالشهر.","ممكن تساعدني بمبلغ بسيط؟"]:role==="أخ"?["ممكن تسلفني شوي مصاري؟","بدي أشتري غرض ومحتاج مساعدتك."]:role==="أخت"?["ممكن تعطيني مصروفاً؟","بدي أشتري شغلة ضرورية."]:["ممكن تساعدني بمصاريف بسيطة؟","محتاج مبلغاً لهالأسبوع."];const cost=role==="الأم"?180:role==="الأب"?250:120+Math.floor(Math.random()*180);const line=requests[Math.floor(Math.random()*requests.length)];lifePanel("📩 طلب من "+escapeText(person),'<div class="lifeCard">'+escapeText(person)+': «'+escapeText(line)+'»<br>المبلغ: $'+fmt(cost)+'</div><button id="acceptReq">أوافق وأعطيه المال</button><button id="rejectReq">أرفض</button>');$("acceptReq").onclick=()=>{if(!budgetPay(cost,"مساعدة "+person))return;if(member)familyMood(member,8);else if(S.spouse)familyMood(S.spouse,8);toast("❤️ شكراً لمساعدتك "+person);familyPanel()};$("rejectReq").onclick=()=>{if(member)familyMood(member,-8);else if(S.spouse)familyMood(S.spouse,-5);toast(person+" زعل قليلاً لأنك رفضت.");familyPanel()}}
+function carPanel(){ensureLife();const owned=S.car;let html=owned?'<div class="lifeCard"><b>🚗 '+escapeText(owned.name)+'</b><br>مستوى السيارة: '+owned.level+'/10<br>تخفيض وقت العمل: '+(owned.level-1)+' دقيقة لكل مهمة<br>الترقية القادمة: $'+fmt(carUpgradeCost(owned.level))+'<button id="carUpgrade">طوّر السيارة 🚀</button></div>':'<div class="lifeCard">لا تملك سيارة بعد. اختر سيارة للشراء.</div>';
+ html+='<h4>معرض السيارات</h4>'+CAR_TYPES.map((c,i)=>'<div class="lifeCard"><b>'+c.name+'</b><br>السعر: $'+fmt(worldPrice(c.price))+'<br><button data-buycar="'+i+'">شراء السيارة</button></div>').join('');
+ lifePanel("🚗 معرض السيارات",html);
+ const up=$("carUpgrade");if(up)up.onclick=()=>{if(!S.car||S.car.level>=10){toast("سيارتك في أعلى مستوى.");return}const cost=carUpgradeCost(S.car.level);if(!budgetPay(cost,"تطوير السيارة"))return;S.car.level++;dirty=true;hud();toast("🚗 تم تطوير السيارة إلى المستوى "+S.car.level+"! وقت العمل أقل بدقيقة.");carPanel()};
+ $("lifePanel").querySelectorAll('[data-buycar]').forEach(b=>b.onclick=()=>{const c=CAR_TYPES[Number(b.dataset.buycar)];if(!budgetPay(worldPrice(c.price),"شراء "+c.name))return;S.car={name:c.name,level:1};dirty=true;hud();toast("مبروك! أصبحت تملك "+c.name);carPanel()});
+}
+function carUpgradeCost(level){return Math.round(3500*Math.pow(level,2))}
+function marriagePanel(){
+ ensureLife();if(S.spouse){lifePanel("💍 الزواج",'<div class="lifeCard">أنت متزوج/ة من '+escapeText(S.spouse.name)+'.</div>');return}
+ const candidates=S.gender==="male"?NPC_WOMEN:NPC_MEN;
+ const html='<div class="lifeCard">اختاري/اختر الشخص المناسب. لكل شخصية مهر وشروط مختلفة، وقد توافق أو ترفض طلب الزواج بعد التفكير.</div>'+candidates.map((n,i)=>'<div class="lifeCard"><b>'+(S.gender==="male"?'👩 ':'👨 ')+n.name+'</b><br>'+(S.gender==="male"?'المهر المطلوب: $'+fmt(n.dowry):'المتطلبات المالية: لا يوجد مهر')+'<br>الطباع: '+ZX_TAG[zxAtt(n)]+'<br>مستوى البيت: '+n.house+' · مستوى السيارة: '+n.car+' · مستوى الوظيفة: '+n.job+'<br><button data-propose="'+i+'">طلب الزواج 💍</button></div>').join('');
+ lifePanel("💍 قائمة الزواج",html);
+ $("lifePanel").querySelectorAll('[data-propose]').forEach(b=>b.onclick=()=>propose(candidates[Number(b.dataset.propose)]));
+}
+function propose(n){
+ const car=carLevel(),job=currentProgress().level;
+ const fee=S.gender==="male"?n.dowry:0;
+ const meets=owner||(S.house>=n.house&&car>=n.car&&job>=n.job&&S.money>=fee);
+ if(!meets){lifePanel("لم تكتمل الشروط",'<div class="lifeCard">هذه الشخصية تحتاج بيتاً مستوى '+n.house+'، وسيارة مستوى '+n.car+'، ووظيفة مستوى '+n.job+(fee?'، ومهراً $'+fmt(fee):'')+'. طوّر ممتلكاتك وحاول مجدداً.</div>');return}
+ const accepts=owner||Math.random()<0.62;
+ if(accepts){if(fee&&!budgetPay(fee,"مهر الزواج"))return;S.spouse={name:n.name,role:S.gender==="male"?"زوجة":"زوج",since:Date.now(),love:75,att:n.att};if(Math.random()<.35){S.spouse.jobKey=JOB_KEYS[Math.floor(Math.random()*JOB_KEYS.length)];S.spouse.jobLevel=1+Math.floor(Math.random()*3)}S.married=true;dirty=true;hud();lifePanel("🎉 مبروك الزواج!",'<div class="lifeCard">وافق/ت '+escapeText(n.name)+' على الزواج! أصبحتما عائلة واحدة. يمكنك زيارة قسم العائلة للتفاعل وإنجاب الأبناء.</div>');}
+ else lifePanel("💌 طلبك قيد التفكير",'<div class="lifeCard">شكراً على طلبك، لكن '+escapeText(n.name)+' قرر/ت عدم الموافقة هذه المرة. يمكنك تطوير حياتك والمحاولة مع شخصية أخرى.</div>');
+}
+function profilesPanel(){const ids=Object.keys(players||{});if(S&&!ids.includes(me))ids.push(me);const html=ids.map(id=>{const q=id===me?S:players[id];return '<div class="lifeCard"><b>@'+escapeText(q.insta||id)+'</b><br><span class="muted">اضغط لعرض الملف الشخصي</span><br><button data-profile="'+escapeText(id)+'">عرض الملف 👤</button></div>'}).join('')||'<p>لا يوجد لاعبون آخرون حالياً.</p>';lifePanel("👥 لاعبو عالم ZX",html);$("lifePanel").querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>showProfile(b.dataset.profile));}
+function showProfile(id){const q=id===me?S:players[id];if(!q)return;const job=JOBS[q.activeJob]?.name||"بدون وظيفة";const prog=q.jobs?.[q.activeJob]||{level:1};const family=(q.family||[]).map(x=>escapeText(x.role)+": "+escapeText(x.name)).join("، ")||"غير محددة";const html='<div class="lifeCard"><b>@'+escapeText(q.insta||id)+'</b><br>الجنس: '+(q.gender==="male"?'ذكر':'أنثى')+'<br>الرصيد: $'+fmt(q.money)+'<br>البيت: المستوى '+(q.house||1)+'<br>الوظيفة: '+job+' — المستوى '+prog.level+'<br>السيارة: '+(q.car?escapeText(q.car.name)+" — المستوى "+q.car.level:"لا توجد سيارة")+'<br>الزوج/الزوجة: '+(q.spouse?escapeText(q.spouse.name):"غير متزوج/ة")+'<br>وظيفة الشريك: '+(q.spouse&&q.spouse.jobKey?escapeText(JOBS[q.spouse.jobKey].name)+" — المستوى "+(q.spouse.jobLevel||1):"لا يعمل")+'<br>الأبناء: '+((q.children||[]).map(c=>escapeText(c.name)).join("، ")||"لا يوجد")+'<br>العائلة: '+family+'</div><button id="profileBack">رجوع لقائمة اللاعبين</button>';lifePanel("👤 الملف الشخصي",html);$("profileBack").onclick=profilesPanel;}
+function ownerTestPanel(){if(!owner)return;lifePanel("👑 مركز اختبار المالك",'<div class="lifeCard">صلاحيات كاملة: لا خصم مال عند المالك، تجاوز شروط الزواج والميزانية، وإنجاب بلا حد، واختبار الوظائف والممتلكات.</div><button id="ownerMoney">إضافة 100000 للرصيد</button><button id="ownerBaby">إنجاب طفل فوري للتجربة</button><button id="testMale">تجربة كذكر 👨</button><button id="testFemale">تجربة كأنثى 👩</button><button id="testJobs">ترقية كل الوظائف للمستوى 10</button><button id="testOneJob">اختبار مستوى وظيفة محددة</button><button id="testHouse">البيت مستوى 6</button><button id="testCar">سيارة مستوى 10</button><button id="testMarriage">تجربة الزواج</button>');const om=$("ownerMoney");if(om)om.onclick=()=>{S.money=(S.money||0)+100000;dirty=true;hud();toast("تمت إضافة 100000 إلى رصيد المالك")};const ob=$("ownerBaby");if(ob)ob.onclick=()=>{const gender=Math.random()<.5?"male":"female";const names=gender==="male"?["آدم","يزن","عمر"]:["ليان","جنى","نور"];const name=names[Math.floor(Math.random()*names.length)];S.children.push({name,gender,ageYears:0,lastAgeAt:Date.now(),love:70});dirty=true;toast("👑 طفل تجريبي جديد: "+name);familyPanel()};$("testMale").onclick=()=>{S.gender="male";S.spouse=null;S.married=false;dirty=true;marriagePanel()};$("testFemale").onclick=()=>{S.gender="female";S.spouse=null;S.married=false;dirty=true;marriagePanel()};$("testJobs").onclick=()=>{normalizeJobs();for(const k of JOB_KEYS)S.jobs[k]={level:jobMaxLevel(k),works:0,experienced:true};dirty=true;hud();toast("تم فتح المستوى العاشر في جميع الوظائف")};$("testOneJob").onclick=()=>{const k=prompt("اكتبي اسم الوظيفة: "+JOB_KEYS.join(", "),"hospital");if(!JOBS[k]){toast("استخدمي اسم الوظيفة كما يظهر في القائمة.");return}const max=jobMaxLevel(k);const n=Math.max(1,Math.min(max,Number(prompt("اختاري المستوى من 1 إلى "+max,""+max))||1));S.jobs[k]={level:n,works:0,experienced:true};S.activeJob=k;dirty=true;hud();syncHouses();toast("تم ضبط "+JOBS[k].name+" على المستوى "+n)};$("testHouse").onclick=()=>{S.house=6;dirty=true;hud();syncHouses();toast("تم تطوير البيت للمستوى السادس")};$("testCar").onclick=()=>{S.car={name:"سيارة VIP 👑",level:10};dirty=true;toast("تم فتح السيارة بالمستوى العاشر")};$("testMarriage").onclick=marriagePanel;}
+// ---------- game ----------
+function hud(){
+  normalizeJobs();const p=currentProgress(),lv=jobLevel(),need=promotionCount(p.level);
+  $("money").textContent="$"+fmt(S.money);
+  $("job").textContent=currentJob().name+" · "+lv[0]+" · مستوى "+p.level+" · التقدم: "+p.works+"/"+need+" · الراتب $"+jobSalary(S.activeJob,lv)+" / "+effectiveWorkMinutes(lv[2])+" دقيقة مع السيارة";
+  $("inc").textContent=fmt(S.earned);$("exp").textContent=fmt(S.spent);
+  $("bu").textContent=S.house>=MAXH?"البيت بالحد الأقصى":"طوّر البيت $"+fmt(upCost(S.house));
+  $("bu").disabled=S.house>=MAXH;
+  $("log").innerHTML=(S.log||[]).map(l=>"<div><span>"+l.t+"</span><span class='"+(l.a>=0?"p":"n")+"'>"+(l.a>=0?"+":"")+fmt(l.a)+"</span></div>").join("")||"<div>لا يوجد سجل بعد</div>";
+}
+function jobSalary(jobId,level){const progress=S.jobs?.[jobId];return Math.round((progress?.famous?1000:level[1])*(Number(WORLD.salaryMultiplier)||1))}
+function finishWork(){
+  if(!S||!S.workUntil)return;
+  const jobId=S.workJob||S.activeJob;
+  const level=JOBS[jobId]?.levels?.[(S.jobs?.[jobId]?.level||1)-1];
+  if(!level){S.workUntil=null;S.workJob=null;return}
+  const salary=jobSalary(jobId,level);S.money=(Number(S.money)||0)+salary;S.earned=(Number(S.earned)||0)+salary;
+  const p=S.jobs[jobId];p.works++;
+  log("راتب "+JOBS[jobId].name+" - "+level[0],salary);
+  S.workUntil=null;S.workJob=null;
+  if(p.level<jobMaxLevel(jobId)&&p.works>=promotionCount(p.level)){
+    p.level++;p.works=0;
+    const next=JOBS[jobId].levels[p.level-1];
+    toast("🎉 مبروك! ترقيت إلى "+next[0]+" في "+JOBS[jobId].name);
+    log("ترقية إلى "+next[0],0);
+    setTimeout(()=>alert("🎉 مبروك الترقية!\nأصبحت: "+next[0]+"\n\nدورك الجديد: "+next[3]+"\n\nراتبك الجديد: $"+next[1]+" مقابل "+next[2]+" دقيقة عمل."),150);
+  }else if(p.level===jobMaxLevel(jobId)){toast("أنت في أعلى مستوى! استمر بالعمل لتحصل على راتبك.")}
+  dirty=true;hud();syncHouses();updateWorkButton();
+}
+function updateWorkButton(){
+ const b=$("bw");if(!b||!S)return;
+ if(S.workUntil){const left=Math.max(0,Math.ceil((S.workUntil-Date.now())/1000));if(left<=0){finishWork();return}b.disabled=true;b.textContent="جاري العمل ⏳ "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0")}
+ else{b.disabled=false;b.textContent="ابدأ العمل 💼"}
+}
+function work(){
+  if(Date.now()<cd||S.workUntil)return;cd=Date.now()+800;
+  normalizeJobs();const lv=jobLevel();
+  S.workJob=S.activeJob;const minutes=effectiveWorkMinutes(lv[2]);S.workUntil=Date.now()+minutes*60*1000;
+  dirty=true;toast("بدأت العمل! سيصلك راتب $"+jobSalary(S.activeJob,lv)+" بعد "+minutes+" دقيقة."+(carLevel()>1?" (خصم السيارة "+(carLevel()-1)+" دقيقة)":""));
+  updateWorkButton();
+}
+function showJobs(){
+ const panel=$("jobPanel");if(!panel)return;
+ normalizeJobs();
+ panel.style.display="block";
+ const activeProgress=S.jobs[S.activeJob],activeJob=JOBS[S.activeJob];
+ const investBox=activeJob&&activeJob.simple ? (`<div class="jobNote"><b>📈 استثمار وتطوير المحل</b><br>تكلفة تطوير محل ${escapeText(activeJob.name)} هي $${fmt(activeJob.investmentCost)}. فرصة النجاح قليلة جداً (${Math.round(activeJob.investmentChance*100)}٪). إذا نجح الاستثمار ستصبح مشهوراً ويصل راتبك إلى $1000 لكل مهمة. إذا فشل تخسر مبلغ الاستثمار وتبقى وظيفتك وراتبك كما هما.${activeProgress.famous?'<br><b>🌟 أنت مشهور بالفعل! راتبك $1000.</b>':''}</div>${activeProgress.famous?'':`<button id="investJob" class="jobChoice">💰 استثمر في تطوير المحل — $${fmt(activeJob.investmentCost)}</button>`}`) : '';
+ panel.innerHTML='<button id="jobsClose" style="float:left;flex:none">إغلاق ✕</button><h3>💼 الوظائف في عالم ZX</h3><div class="jobNote">الوظائف البسيطة تقبل طلبك من أول مرة، ولكل واحدة 5 مستويات فقط وراتب أساسي أقصاه $500. الوظائف الأخرى تحتفظ بمساراتها الحالية. يمكنك الاستثمار في محل وظيفتك البسيطة؛ النجاح نادر جداً وقد يجعلك مشهوراً براتب $1000. أثناء وقت العمل لا يمكن تغيير الوظيفة.</div>'+JOB_KEYS.map(k=>{const j=JOBS[k],p=S.jobs[k],active=k===S.activeJob,lv=j.levels[Math.max(0,Math.min(j.levels.length-1,p.level-1))];return '<button class="jobChoice" data-job="'+k+'" '+(active?'disabled':'')+'>'+j.name+(active?' ✓ (وظيفتك الحالية)':'')+'<small>'+(j.simple?'وظيفة بسيطة · 5 مستويات · ':'')+(p.experienced?'خبرة سابقة · ':'')+'المستوى '+p.level+'/'+j.levels.length+' — '+lv[0]+' — الراتب $'+(p.famous?1000:lv[1])+' / '+lv[2]+' دقيقة'+(p.famous?' · مشهور 🌟':'')+'</small></button>'}).join('')+investBox;
+ $("jobsClose").onclick=()=>panel.style.display="none";
+ panel.querySelectorAll("[data-job]").forEach(btn=>btn.onclick=()=>selectJob(btn.dataset.job));
+ const invest=$("investJob");if(invest)invest.onclick=()=>investInCurrentJob();
+}
+function investInCurrentJob(){
+ const key=S.activeJob,j=JOBS[key],p=S.jobs[key];
+ if(!j?.simple){toast("الاستثمار متاح للوظائف البسيطة فقط.");return}
+ if(p.famous){toast("أنت مشهور بالفعل وراتبك $1000!");return}
+ if(!owner&&S.money<j.investmentCost){toast("رصيدك لا يكفي للاستثمار.");return}
+ if(!budgetPay(j.investmentCost,"استثمار وتطوير محل "+j.name))return;
+ if(Math.random()<j.investmentChance){p.famous=true;toast("🌟 نجاح نادر! أصبح محلك مشهوراً وراتبك الآن $1000 لكل مهمة!");log("نجاح الاستثمار والشهرة",0)}
+ else{toast("لم ينجح الاستثمار هذه المرة. خسرت تكلفة التطوير، لكن وظيفتك وراتبك بقيا كما هما.");log("فشل استثمار محل "+j.name,0)}
+ dirty=true;hud();showJobs();
+}
+function selectJob(k){
+ if(S.workUntil){toast("أنهي عملك الحالي أولاً قبل تغيير الوظيفة.");return}
+ if(!JOBS[k]||k===S.activeJob)return;
+ // التوظيف عشوائي: المالك لديه صلاحية مباشرة، وباقي اللاعبين لديهم فرصة قبول 65%.
+ const accepted=owner||JOBS[k].simple||Math.random()<0.65;
+ if(!accepted){
+   alert("😔 نعتذر! لم يتم قبول طلبك في "+JOBS[k].name+" هذه المرة.\n\nلا تقلق، يمكنك التقديم مرة أخرى لاحقاً. وظيفتك الحالية وخبرتك السابقة محفوظتان.");
+   toast("لم يتم قبول طلب الوظيفة. حاولي مرة أخرى لاحقاً.");
+   return;
+ }
+ const old=S.activeJob;
+ if(old&&old!==k){S.jobs[old].experienced=true;}
+ if(old!==k){const p=S.jobs[k];if(p.experienced){p.level=Math.min(5,jobMaxLevel(k));p.works=0;alert("🎉 تم قبولك! أهلاً بعودتك إلى "+JOBS[k].name+".\n\nبفضل خبرتك السابقة ستعود إلى المستوى الخامس.")}else{p.level=1;p.works=0;alert("🎉 مبروك! تم قبولك في "+JOBS[k].name+".\n\nستبدأ من المستوى الأول، وبالتوفيق في عملك!")}}
+ S.activeJob=k;dirty=true;hud();syncHouses();showJobs();
+}
+function workClock(){if(S&&S.workUntil){if(Date.now()>=S.workUntil)finishWork();else updateWorkButton()}}
+function upgrade(){
+  const c=upCost(S.house);
+  if(!owner&&S.money<c){toast("فلوسك ما تكفي");return}
+  if(!budgetPay(c,"تطوير البيت"))return;
+  S.house++;dirty=true;hud();syncHouses();toast("تم تطوير البيت 🏠");
+}
+function bills(){
+  if(!S)return;const b=Math.min(S.money,S.house*6);
+  if(b>0){S.money-=b;S.spent+=b;log("فواتير البيت",-b);dirty=true;hud()}
+}
+function pickPlot(){
+  const used=new Set(Object.values(players).map(p=>p.plot));
+  let p=hue(me)*7%HOUSE_CELLS.length;
+  for(let i=0;i<HOUSE_CELLS.length;i++){const q=(p+i)%HOUSE_CELLS.length;if(!used.has(q))return q}
+  return 0;
+}
+let cx=0,cz=0,zoom=1,follow=true;
+const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+function logoutPlayer(){
+  const cloud=!!window.ZX_SIGNOUT;
+  if(!confirm(cloud?"تسجيل الخروج؟ بتفقد الوصول لحسابك الحالي على هذا الجهاز.":"تغيير الحساب؟ تقدمك محفوظ، وبترجع لشاشة اسم الإنستا."))return;
+  (async()=>{
+    try{localStorage.removeItem("zx-city-player")}catch(e){}
+    if(cloud){try{if(db&&S)await db.doc("players/"+me).set(S)}catch(e){}try{await window.ZX_SIGNOUT()}catch(e){}location.reload();return}
+    if(db&&S){try{await db.doc("players/"+me).set({...S,insta:null})}catch(e){}}
+    location.reload();
+  })();
+}
+function begin(){
+  {const lo=$("logoutBtn");if(lo)lo.onclick=logoutPlayer}
+  const isNewPlayer=!S;
+  if(!S){S={plot:pickPlot(),money:200,house:1,earned:0,spent:0,log:[],items:[],activeJob:"hospital",jobs:{}};players[me]=S;dirty=true}
+  if(S.insta!==insta){S.insta=insta;dirty=true}
+  S.log=S.log||[];S.items=S.items||[];normalizeJobs();ensureLife();
+  const p=plotPos(S.plot);
+  myAv=avatar(new THREE.Color().setHSL(hue(me)/360,.7,.5).getHex(),insta);myAv.position.set(p.x,0,p.z+3.9);
+  cx=myAv.position.x;cz=myAv.position.z;
+  $("gate").style.display="none";$("msg").style.display="none";
+  $("ownerTag").style.display=owner?"block":"none";$("bo").style.display=owner?"":"none";
+  syncHouses();hud();
+  $("bw").onclick=work;$("jobsBtn").onclick=showJobs;$("familyBtn").onclick=familyPanel;$("homeBtn").onclick=homePanel;$("carBtn").onclick=carPanel;$("profilesBtn").onclick=profilesPanel;$("bu").onclick=upgrade;$("bc").onclick=()=>follow=true;
+  $("bl").onclick=()=>{const l=$("log");l.style.display=l.style.display==="block"?"none":"block"};
+  $("bagBtn").onclick=()=>{const b=$("bag");b.style.display=b.style.display==="block"?"none":"block";drawBag()};
+  $("bo").onclick=ownerPanelToggle;
+  setInterval(bills,45000);setInterval(workClock,1000);setInterval(lifeTick,15000);
+  setInterval(()=>{if(dirty){dirty=false;savePlayer()}},2000);
+  if(owner)ownerPanel();
+  if(isNewPlayer)showJobs();
+  if(!S.gender)chooseGender();
+  toast("🏙️ استكشف المدينة: المباني موزعة حول الأحياء، وخذ عائلتك لأي وجهة برحلة مدفوعة!");if(owner){const ob=document.createElement("button");ob.textContent="💍 الزواج / اختبار";ob.style.cssText="position:fixed;top:118px;right:8px;z-index:7;padding:8px;background:#b8860b";ob.onclick=ownerTestPanel;document.body.appendChild(ob);}
+  updateWorkButton();
+  loop();
+}
+// ---------- owner tools ----------
+function drawBag(){
+  const b=$("bag");if(!b)return;
+  const items=(S&&S.items)||[];
+  b.innerHTML='<button id="bagClose" style="float:left;flex:none">إغلاق ✕</button><h3>🎁 أغراضي</h3>'+
+    (items.length?items.map(x=>'<div style="padding:7px;border-bottom:1px solid #8885">'+escapeText(x.icon||'🎁')+' '+escapeText(x.name||'هدية')+'</div>').join(''):'<p class="m">حقيبتك فارغة حالياً.</p>');
+  $("bagClose").onclick=()=>b.style.display="none";
+}
+function escapeText(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function ownerPanel(){
+  if(!owner)return;
+  const panel=$("ownerPanel");
+  panel.style.display="block";
+  panel.innerHTML='<button id="ownerClose" style="float:left;flex:none">إغلاق ✕</button><h3>👑 لوحة تحكم المالك</h3><div class="actions"><button id="celebrate">🎉 توزيع مكافأة</button><button class="s" id="refreshPlayers">🔄 تحديث اللاعبين</button><button id="ownerTest">🧪 مركز اختبار المالك</button></div><h4>📢 إعلان لكل اللاعبين</h4><input id="ownerAnnouncement" maxlength="180" placeholder="اكتبي الإعلان..." style="width:100%;box-sizing:border-box;padding:11px;border-radius:10px"><button id="sendAnnouncement">إرسال الإعلان</button><h4>🎪 فعالية وهدايا</h4><input id="ownerEvent" maxlength="100" placeholder="اسم الفعالية" style="width:100%;box-sizing:border-box;padding:11px;border-radius:10px"><button id="startEvent">بدء الفعالية وإعلانها</button><h4>⚙️ أسعار المدينة والرواتب</h4><p class="m">تغيير المضاعفات: 1 = السعر الأصلي، 0.5 = نصف السعر، 2 = الضعف.</p><label>أسعار تطوير البيوت <input id="houseMult" type="number" min="0.1" max="10" step="0.1" value="'+WORLD.housePriceMultiplier+'" style="width:80px"></label><br><label>أسعار السيارات <input id="carMult" type="number" min="0.1" max="10" step="0.1" value="'+WORLD.carPriceMultiplier+'" style="width:80px"></label><br><label>رواتب الوظائف <input id="salaryMult" type="number" min="0.1" max="10" step="0.1" value="'+WORLD.salaryMultiplier+'" style="width:80px"></label><button id="saveWorldSettings">حفظ إعدادات العالم</button><p class="m">طلبات الانضمام</p><div id="ownerRequests">تحميل الطلبات…</div><h4>اللاعبون</h4><div id="ownerPlayers">تحميل اللاعبين…</div>';
+  $("ownerClose").onclick=()=>panel.style.display="none";
+  $("sendAnnouncement").onclick=()=>{if(!owner)return;const msg=$("ownerAnnouncement").value.trim();if(!msg)return toast("اكتبي نص الإعلان أولاً");if(!db)return toast("الإعلانات العامة تحتاج اتصالاً أونلاين");db.doc("world/announcement").set({id:Date.now(),text:"📢 "+msg,at:Date.now()}).then(()=>toast("تم إرسال الإعلان")).catch(()=>toast("تعذر إرسال الإعلان"))};
+  $("startEvent").onclick=()=>{if(!owner)return;const ev=$("ownerEvent").value.trim();if(!ev)return toast("اكتبي اسم الفعالية");if(!db)return toast("الفعاليات العامة تحتاج اتصالاً أونلاين");const msg="🎪 بدأت فعالية: "+ev+" — من تنظيم المالك!";db.doc("world/announcement").set({id:Date.now(),text:msg,at:Date.now()}).then(()=>toast("تم إعلان الفعالية")).catch(()=>toast("تعذر بدء الفعالية"))};
+  $("saveWorldSettings").onclick=()=>{if(!owner)return;const h=Number($("houseMult").value),c=Number($("carMult").value),j=Number($("salaryMult").value);if([h,c,j].some(v=>!Number.isFinite(v)||v<.1||v>10))return toast("اختاري مضاعفاً بين 0.1 و10");WORLD={...WORLD,housePriceMultiplier:h,carPriceMultiplier:c,salaryMultiplier:j};if(!db)return toast("حُفظت محلياً لهذه الجلسة فقط؛ الحفظ العام يحتاج اتصالاً");db.doc("world/settings").set(WORLD).then(()=>toast("تم حفظ إعدادات الأسعار والرواتب للعالم")).catch(()=>toast("تعذر حفظ الإعدادات"))};
+  $("refreshPlayers").onclick=()=>{drawOwnerPlayers();drawOwnerRequests()};
+  $("celebrate").onclick=celebrateAll;
+  const ot=$("ownerTest");if(ot)ot.onclick=ownerTestPanel;
+  drawOwnerPlayers();drawOwnerRequests();
+  if(db){
+    try{db.collection("requests").onSnapshot(s=>{window._zxRequests=s.docs.map(d=>({id:d.id,...d.data()}));drawOwnerRequests()})}catch(e){}
+    try{db.collection("players").onSnapshot(s=>{players={};s.docs.forEach(d=>players[d.id]=d.data());if(S)players[me]=S;drawOwnerPlayers();syncHouses()})}catch(e){}
+  }
+}
+function drawOwnerRequests(){
+  const el=$("ownerRequests");if(!el)return;
+  const reqs=window._zxRequests||[];
+  el.innerHTML=reqs.length?'':'<p class="m">ما في طلبات جديدة.</p>';
+  reqs.forEach(r=>{
+    const row=document.createElement('div');row.className='player';
+    const name=document.createElement('b');name.textContent='@'+(r.insta||r.id);row.appendChild(name);
+    const yes=document.createElement('button');yes.textContent='✅ موافقة';yes.onclick=()=>{if(!db){toast('الموافقة تحتاج اتصال متعدد اللاعبين');return}db.doc('approved/'+r.id).set({ok:true}).then(()=>toast('تمت الموافقة'))};
+    const no=document.createElement('button');no.textContent='رفض';no.style.background='#c0392b';no.onclick=()=>{if(db)db.doc('requests/'+r.id).delete().then(()=>toast('تم حذف الطلب'))};
+    row.append(yes,no);el.appendChild(row);
+  });
+}
+function drawOwnerPlayers(){
+  const el=$("ownerPlayers");if(!el)return;
+  const ids=Object.keys(players||{});
+  if(S&&!ids.includes(me))ids.push(me);
+  el.innerHTML=ids.length?'':'<p class="m">لا يوجد لاعبون ظاهرون حالياً.</p>';
+  ids.forEach(id=>{
+    const p=id===me?S:(players[id]||{});if(!p)return;
+    const row=document.createElement('div');row.className='player';
+    const name=document.createElement('b');name.textContent='@'+(p.insta||id);row.appendChild(name);
+    const cash=document.createElement('span');cash.className='m';cash.textContent='$'+fmt(p.money||0);row.appendChild(cash);
+    const money=document.createElement('button');money.textContent='💵 فلوس';money.onclick=()=>{const n=Number(prompt('كم مبلغ الفلوس التي تريدين إعطاءها؟','100'));if(Number.isFinite(n)&&n>0)changePlayer(id,p,{money:n})};row.appendChild(money);
+    const visit=document.createElement('button');visit.textContent='🏠 زيارة البيت';visit.onclick=()=>{const pos=plotPos(p.plot);cx=pos.x;cz=pos.z;follow=false;toast('🏠 أنتِ الآن تشاهدين بيت @'+(p.insta||id))};row.appendChild(visit);
+    const gift=document.createElement('button');gift.textContent='🎁 هدية';gift.onclick=()=>{const name=prompt('اكتبي اسم الهدية (مثلاً قطة أو سيارة أو تاج):','قطة');if(name&&name.trim())giveItem(id,p,name.trim())};row.appendChild(gift);
+    const del=document.createElement('button');del.textContent='🗑️ حذف';del.style.background='#c0392b';del.disabled=id===me;del.onclick=()=>{if(confirm('متأكدة من حذف هذا اللاعب؟'))deletePlayer(id)};row.appendChild(del);
+    el.appendChild(row);
+  });
+}
+function changePlayer(id,p,amount){
+  const delta=typeof amount==='object'?(Number(amount.money)||0):(Number(amount)||0);
+  const next={...p,money:(Number(p.money)||0)+delta,earned:(Number(p.earned)||0)+delta};
+  if(id===me){S=next;players[me]=S;dirty=true;hud();toast('تمت إضافة $'+fmt(amount));drawOwnerPlayers();return}
+  if(!db){toast('إعطاء لاعب آخر يحتاج اتصال متعدد اللاعبين');return}
+  db.doc('players/'+id).set(next).then(()=>toast('تم إرسال $'+fmt(amount)+' للاعب')).catch(()=>toast('تعذر إرسال المبلغ'));
+}
+function giveItem(id,p,name){
+  const icons={'قطة':'🐱','سيارة':'🚗','تاج':'👑','دراجة':'🚲','بيت':'🏠','شجرة':'🌳'};
+  const next={...p,items:[...(p.items||[]),{name,icon:icons[name]||'🎁',givenAt:Date.now()}]};
+  if(id===me){S=next;players[me]=S;dirty=true;drawBag();toast('وصلتك هدية: '+name);drawOwnerPlayers();return}
+  if(!db){toast('إهداء لاعب آخر يحتاج اتصال متعدد اللاعبين');return}
+  db.doc('players/'+id).set(next).then(()=>toast('تم إرسال الهدية')).catch(()=>toast('تعذر إرسال الهدية'));
+}
+function deletePlayer(id){
+  if(id===me)return;
+  if(!db){toast('حذف لاعب يحتاج اتصال متعدد اللاعبين');return}
+  Promise.all([db.doc('players/'+id).delete(),db.doc('approved/'+id).delete(),db.doc('requests/'+id).delete()]).then(()=>toast('تم حذف اللاعب')).catch(()=>toast('تعذر حذف اللاعب'));
+}
+function celebrateAll(){
+  const amount=Number(prompt('كم توزعين على كل لاعب؟','100'));
+  if(!Number.isFinite(amount)||amount<0){toast('المبلغ غير صالح');return}
+  const ids=Object.keys(players||{});
+  if(S&&!ids.includes(me))ids.push(me);
+  ids.forEach(id=>{const p=id===me?S:players[id];if(p)changePlayer(id,p,amount)});
+  const message='🎉 احتفال مفاجئ من المالك! حصل كل لاعب على $'+fmt(amount);
+  toast(message);
+  if(db)db.doc('world/announcement').set({id:Date.now(),text:message,at:Date.now()}).catch(()=>{});
+}
+function ownerPanelToggle(){const p=$("ownerPanel");if(p.style.display==="block")p.style.display="none";else ownerPanel()}
+// ---------- controls: drag = pan, pinch/wheel = zoom, tap = walk ----------
+const cv=R.domElement,ptr=new Map();let moved=0,pd=0;
+const pdist=()=>{const [a,b]=[...ptr.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1};
+const ray=new THREE.Raycaster(),pl=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;if(ptr.size===2)pd=pdist()});
+cv.addEventListener("pointermove",e=>{
+  const p=ptr.get(e.pointerId);if(!p)return;
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+  if(ptr.size===1&&moved>8){const u=11.9*zoom/innerHeight;follow=false;cx=cl(cx-dx*u,-12,102);cz=cl(cz-dy*u*1.2,-12,102)}
+  else if(ptr.size===2){const d=pdist();zoom=cl(zoom*pd/d,.45,2.6);pd=d;follow=false}
+});
+function up(e){
+  if(ptr.size===1&&moved<=8&&myAv){
+    ray.setFromCamera({x:e.clientX/innerWidth*2-1,y:-(e.clientY/innerHeight)*2+1},cam);
+    for(const id in peerAv){const hits=ray.intersectObjects(peerAv[id].children,true);if(hits.length&&players[id]){showProfile(id);ptr.delete(e.pointerId);pd=0;return}}
+    const v=new THREE.Vector3();if(ray.ray.intersectPlane(pl,v)){target=v;follow=true}
+  }
+  ptr.delete(e.pointerId);pd=0;
+}
+cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",e=>{ptr.delete(e.pointerId)});
+cv.addEventListener("wheel",e=>{e.preventDefault();zoom=cl(zoom*(1+e.deltaY*.001),.45,2.6)},{passive:false});
+function resize(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener("resize",resize);resize();
+let last=performance.now(),pt=0,lx=0,lz=0;
+function loop(){
+  requestAnimationFrame(loop);
+  const now=performance.now(),dt=Math.min((now-last)/1000,.1);last=now;animateCity(dt);
+  if(target){
+    const dx=target.x-myAv.position.x,dz=target.z-myAv.position.z,d=Math.hypot(dx,dz);
+    if(d<.15)target=null;else{const s=Math.min(7*dt,d);myAv.position.x+=dx/d*s;myAv.position.z+=dz/d*s;myAv.rotation.y=Math.atan2(dx,dz)}
+  }
+  pt+=dt;
+  if(room&&pt>.25){pt=0;const x=myAv.position.x,z=myAv.position.z;
+    if(Math.abs(x-lx)+Math.abs(z-lz)>.01||!lx){lx=x;lz=z;try{Promise.resolve(room.presence({x:+x.toFixed(2),z:+z.toFixed(2),c:hue(me),n:insta})).catch(()=>{})}catch(e){}}}
+  const seen=new Set();
+  for(const p of peers){
+    if(p.isMe||p.presence.x==null)continue;seen.add(p.peer);
+    let a=peerAv[p.peer];
+    if(!a){a=peerAv[p.peer]=avatar(new THREE.Color().setHSL((+p.presence.c||0)/360,.7,.5).getHex(),p.presence.n);a.position.set(+p.presence.x,0,+p.presence.z)}
+    const dx=p.presence.x-a.position.x,dz=p.presence.z-a.position.z;
+    if(Math.hypot(dx,dz)>.05)a.rotation.y=Math.atan2(dx,dz);
+    a.position.x+=dx*Math.min(1,dt*8);a.position.z+=dz*Math.min(1,dt*8);
+  }
+  for(const k in peerAv)if(!seen.has(k)){scene.remove(peerAv[k]);delete peerAv[k]}
+  $("onl").textContent=seen.size+1;
+  if(follow){const k=Math.min(1,dt*4);cx+=(myAv.position.x-cx)*k;cz+=(myAv.position.z-cz)*k}
+  cam.position.set(cx,24*zoom,cz+16*zoom);cam.lookAt(cx,0,cz);
+  R.render(scene,cam);
+}
+// ---------- entry gate + boot ----------
+window.addEventListener("error",e=>{const m=$("msg");if(m&&m.style.display!=="none"){m.textContent="تعذّر تشغيل العالم: "+(e.message||"خطأ غير معروف")+" — تأكدي من اتصال الإنترنت ثم أعيدي فتح اللعبة."}});
+function gate(mode){
+  $("msg").style.display="none";$("gate").style.display="flex";
+  const w=mode==="wait";
+  $("gi").style.display=w?"none":"";$("gb").style.display=w?"none":"";
+  $("gp").textContent=w?"تم إرسال طلبك. بانتظار موافقة المالك… سيفتح العالم تلقائياً عند الموافقة ✅":"اكتب اسم حسابك في إنستغرام. سيظهر فوق بيتك.";
+}
+function tryStart(){
+  if(started||!gotP)return;
+  insta=insta||(S&&S.insta)||null;
+  if(!okName(insta)){insta=null;gate("form");return}
+  if(owner||approved||!db){started=true;begin();return}
+  gate("wait");
+}
+$("gb").onclick=()=>{
+  const v=$("gi").value.trim().replace(/^@/,"");
+  if(!okName(v)){toast("اسم غير صالح (حروف إنجليزية وأرقام . _ فقط)");return}
+  insta=v;
+  if(db&&!owner&&!approved)db.doc("requests/"+me).set({insta:v,t:Date.now()});
+  tryStart();
+};
+/* ===== حوارات متنوعة + طباع الشخصيات ===== */
+const zxPick=a=>a[Math.floor(Math.random()*a.length)];
+const zxShuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const ZX_ATTS=["refuse","agree","think"];
+const ZX_TAG={refuse:"صارم 🚫 (يرفض غالباً)",agree:"كريم 🤝 (يوافق دائماً)",think:"متردد 🤔 (يفكر قبل ما يقرر)"};
+function zxAtt(m){if(!m.att)m.att=zxPick(ZX_ATTS);return m.att}
+const L_NO=["لا، ما بعطي حدا فلوس، وانتهى الموضوع.","مستحيل، فلوسي مش للتوزيع.","قلت لا وما بغيّر رأيي أبداً.","ما في مجال، لا تعيد الطلب."];
+const L_NOWORK=["لا، ما بدي أشتغل وهذا قراري النهائي.","ما بنفع للشغل، ولا تطلب مني مرة ثانية.","مستحيل أشتغل، خلّيني براحتي."];
+const L_YES=["أبشر، من عيوني!","طبعاً، ما بقدر أرفض لك طلب.","على راسي، أي شي لإلك.","موافق وبكل سرور 💛"];
+const L_THINK=["خليني أفكر شوي وبرجعلك.","مش متأكد... بدي وقت أقرر.","ممكن، بس لازم أفكر بالموضوع.","اعطيني وقت وبجاوبك لاحقاً."];
+const L_SORRY=["بس جيبتي فاضية هالأيام.","والله ما معي كفاية حالياً.","لما تتحسن أموري بساعدك."];
+function zxDecide(m){
+  const a=zxAtt(m);
+  if(a==="agree")return"yes";
+  if(a==="refuse")return((m.love||50)>=90&&Math.random()<.2)?"yes":"no";
+  m.thinkN=(m.thinkN||0)+1;const r=Math.random(),p=.15+Math.min(.5,m.thinkN*.1)+((m.love||50)-50)/300;
+  return r<p?"yes":r<.7?"later":"no";
+}
+function zxInfo(title,m,line,extra){
+  lifePanel(title,'<div class="lifeCard">'+escapeText(m.name)+': «'+escapeText(line)+'»</div>'+(extra||"")+'<button id="zxBack">رجوع</button>');
+  $("zxBack").onclick=familyPanel;
+}
+const DLG={
+"الأم":[
+["يا حبيبي، أكلت اليوم؟ بدي أطمن عليك.","أكلت يا أمي، وإنتِ؟ لا تتعبي حالك ❤️","أيوه أكلت.","لا تحشري حالك بكل شي!"],
+["تعال احكيلي كيف كان يومك، أنا دايماً بسمعك.","تعبان شوي بس وجودك بريحني، تعالي نقعد سوا.","عادي، ما في شي جديد.","مو فاضي أحكي الحين."],
+["اشتقت نقعد سوا ونشرب شاي.","وأنا أكتر يا أمي! خليني أعملك الشاي اليوم ☕","ممكن بعدين.","عندي أشغال أهم من الشاي."],
+["سمعت إنك تعبان بالشغل، لا تحمّل حالك فوق طاقتك.","صح يا أمي، وبوعدك أهتم بصحتي.","ماشي.","لا تتدخلي بشغلي."],
+["الطبخة اليوم على ذوقك، جربها وقلي رأيك.","تسلم إيدك، أطيب أكل بالدنيا! 😋","حلوة.","مش أحسن شي بصراحة."],
+["دعيتلك اليوم بالتوفيق بشغلك.","الله يخليكِ لي، دعاؤك أكبر سند عندي 🤲","شكراً.","ما بحتاج دعاء."]],
+"الأب":[
+["كيف شغلك؟ فخور فيك، بس انتبه لمصروفك.","الله يحفظك يا أبي، وعامل حسابي بالمصروف 💪","تمام الحمدلله.","لا تحاسبني على فلوسي."],
+["شو رأيك نطلع مشوار سوا؟","يلا يا أبي، اشتقتلك! 🚗","مشوار قصير ممكن.","مو فاضي لمشاويرك."],
+["إذا احتجت نصيحة أنا موجود.","أكيد يا أبي، رأيك دايماً بفيدني.","ماشي.","أنا كبرت وبعرف شو بعمل."],
+["الشغل بدو صبر، لا تستعجل النتائج.","كلامك صح، رح أصبر وأتعلم أكتر 🙏","يمكن.","نصايحك قديمة."],
+["بدي أحكيلك عن موقف مرّ علي أيام الشباب...","احكيلي يا أبي، بحب أسمع تجاربك ❤️","طيب احكي بسرعة.","مليت من قصصك."],
+["اشتقتلك وجيت أطمن عليك.","وأنا اشتقتلك أكتر يا أبي، يسلم لي وجودك!","أهلين.","ما كان في داعي."]],
+"أخ":[
+["شو الأخبار؟ بدك نلعب أو نطلع؟","يلا يا أخوي، أنا جاهز 😄","ممكن بعدين.","روح العب لحالك."],
+["ممكن تساعدني بشغلة؟","أكيد، قول شو بدك وأنا معك 💪","شو هي؟","مو فاضيلك."],
+["اشتقت نقضي وقت سوا يا أخوي.","وأنا كمان! نرتب لنا سهرة قريب 🎮","أهلين.","أنا مشغول، لا تحشر."],
+["بدي رأيك بقرار بدي آخده.","احكيلي، رأيك مهم عندي وبساعدك بكل شي.","احكي.","مش مهتم بقراراتك."],
+["سمعت إنك ماشي زي الفل بالشغل، مبروك!","الله يبارك فيك، وإنت كمان إلك نصيب مني 🤝","شكراً.","وإنت شو دخلك؟"],
+["الأيام بتمرق، كنا زغار مع بعض.","يا حلاوة الذكريات! دايماً أخوي وسندي ❤️","ايه صح.","ما بتذكر هالشي."]],
+"أخت":[
+["كيفك؟ نفسي نروح نتسوق سوا.","يلا نتسوق، وأنا اللي بدفع 🛍️","ممكن بعدين.","روحي وحدك."],
+["عندي قصة بدي أحكيلك إياها!","احكي احكي، متشوق أسمع!","شو هي؟","ما بدي أسمع."],
+["شو رأيك نعمل يوم بنات وننبسط؟","فكرة ممتازة! نحجز لنا يوم حلو 💕","ممكن.","شو هالسخافة."],
+["حاسة إني زعلانة شوي اليوم.","تعالي احكيلي، أنا معك دايماً 🤗","يمر الزعل.","مو مشكلتي."],
+["اشتريت لبسة جديدة، شو رأيك؟","حلوة كتير وبتجنن عليكِ! ✨","عادية.","ما بتلبقلك."],
+["اشتقتلك كتير.","وأنا أكتر، الله يخليكِ لي ❤️","أهلين.","لا تحكي كثير."]],
+"الشريك":[
+["وجودك جنبي أحلى شيء بيومي، بحبك ❤️","وأنا أكتر يا روحي، إنت كل حياتي 💕","وأنا كمان.","ما كان في داعي تحكي."],
+["اشتقتلك، شو رأيك نقضي وقت سوا؟","يلا نطلع عشاء رومانسي الليلة 🌹","ممكن بعدين.","مشغول، مو الحين."],
+["إنت سندي وأقرب شخص إلي.","وإنت عمري كله، ما بتخلى عنك أبداً 💍","شكراً.","بلاش كلام زيادة."],
+["حضّرتلك مفاجأة صغيرة لأنك غالي علي.","يا الله شو ذوقك! أحلى مفاجأة بحياتي 🎁","تمام.","ما طلبت منك شي."],
+["حاسس إنك مشغول هالأيام وبفتقدك.","معك حق، رح أعوضك وأعطيك وقتي كله ❤️","بحاول.","هاد شغلي وبعرف شو بعمل."],
+["شو رأيك نحلم سوا ببيت أكبر وعيلة سعيدة؟","أكيد، لسا بنبني أحلى حياة سوا 🏡","نشوف.","لا تحلم كتير."]],
+"عام":[
+["كيف كان يومك؟ مبسوط إني أحكي معك.","يومي صار أحلى لما شفتك 😊","عادي.","مو فاضي أحكي."],
+["شو أخبارك؟","الحمدلله بخير، وإنت كيفك؟","تمام.","ما بدي أحكي."]]
+};
+const R_GOOD=[n=>"ردك أسعد "+n+" 😊",n=>"كلامك الحلو فرّح قلب "+n+" ❤️",n=>"تأثّر "+n+" بكلامك الطيب 🥹"];
+const R_OK=[n=>"ردك مرّ عادي مع "+n+".",n=>n+" ما تأثر كتير بردك."];
+const R_BAD=[n=>"ردك زعّل "+n+" 😞",n=>"ردك ضايق "+n+" 😔",n=>"بان الحزن على "+n+" بعد ردك 💔"];
+function zxTalk(m,key){
+  const d=zxPick(DLG[key]||DLG["عام"]);
+  const rs=zxShuffle([{t:d[1],q:2},{t:d[2],q:1},{t:d[3],q:0}]);
+  const wis=m.role==="الأب"?'<button id="zxWis" class="s">اسمع حكم الأب 👨‍👧</button>':"";
+  lifePanel("💬 حوار مع "+escapeText(m.role||m.name),'<div class="lifeCard">'+escapeText(m.name)+': «'+escapeText(d[0])+'»</div>'+rs.map((r,i)=>'<button data-r="'+i+'">'+escapeText(r.t)+'</button>').join('')+wis);
+  $("lifePanel").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{
+    const r=rs[Number(b.dataset.r)];
+    const delta=r.q===2?8+Math.floor(Math.random()*5):r.q===1?1:-(10+Math.floor(Math.random()*7));
+    familyMood(m,delta);dirty=true;
+    toast((r.q===2?zxPick(R_GOOD):r.q===1?zxPick(R_OK):zxPick(R_BAD))(m.name)+" ("+(delta>0?"+":"")+delta+" محبة)");
+    familyPanel();
+  });
+  const w=$("zxWis");if(w)w.onclick=()=>fatherJudgment(m);
+}
+function familyTalk(i){const m=S.family[i];zxTalk(m,m.role)}
+function familyTalkCustom(person,role){zxTalk({name:person,role,love:60},role)}
+function spouseRomance(){zxTalk(S.spouse,"الشريك")}
+function requestMoneyFrom(m,role){
+  const amount=role==="الشريك"?300+Math.floor(Math.random()*700):100+Math.floor(Math.random()*400);
+  const d=zxDecide(m);
+  if(d==="no"){m.askNo=(m.askNo||0)+1;if(m.askNo>1)familyMood(m,-4);dirty=true;return zxInfo("🚫 رفض قاطع",m,zxPick(L_NO),'<div class="muted">الإلحاح بعد الرفض يزعله.</div>')}
+  if(d==="later")return zxInfo("🤔 يفكر بالموضوع",m,zxPick(L_THINK),'<div class="muted">اطلب منه مرة ثانية لاحقاً.</div>');
+  const give=Math.min(amount,Math.floor(Number(m.cash)||0));
+  if(give<30){familyMood(m,1);return zxInfo("💬 يتمنى يساعد",m,"أبشر، بس "+zxPick(L_SORRY),"")}
+  m.cash-=give;S.money=(S.money||0)+give;S.earned=(S.earned||0)+give;log("مساعدة من "+m.name,give);familyMood(m,4);dirty=true;hud();
+  zxInfo("✅ وافق وأعطاك",m,zxPick(L_YES),'<div class="lifeCard">وصلتك $'+fmt(give)+'</div>');
+}
+function zxAskWork(m){
+  if(m.jobKey)return zxInfo("💼 يعمل بالفعل",m,"أشتغل في "+JOBS[m.jobKey].name+" — مستوى "+(m.jobLevel||1)+".","");
+  const d=zxDecide(m);
+  if(d==="yes"){const key=zxPick(JOB_KEYS);m.jobKey=key;m.jobLevel=1;familyMood(m,5);dirty=true;return zxInfo("🎉 وافق على العمل",m,zxPick(L_YES)+" رح أبدأ في "+JOBS[key].name+".","")}
+  if(d==="later")return zxInfo("🤔 يفكر بالموضوع",m,zxPick(L_THINK),"");
+  familyMood(m,-3);dirty=true;zxInfo("🚫 رفض قاطع",m,zxPick(L_NOWORK),"");
+}
+function askNpcToWork(i){zxAskWork(S.family[i])}
+function askSpouseToWork(){if(S.spouse)zxAskWork(S.spouse)}
+/* مرشحون إضافيون */
+NPC_WOMEN.push(
+{name:"ميار",dowry:2500,house:2,car:1,job:2},{name:"شهد",dowry:3500,house:3,car:1,job:2},{name:"غدير",dowry:6000,house:4,car:2,job:4},
+{name:"روان",dowry:900,house:1,car:0,job:1},{name:"دانة",dowry:9500,house:5,car:3,job:5},{name:"ياسمين",dowry:4800,house:3,car:2,job:3},
+{name:"لمى",dowry:7000,house:4,car:3,job:4},{name:"هيا",dowry:1500,house:2,car:0,job:1},{name:"جود",dowry:11000,house:5,car:4,job:6},{name:"تسنيم",dowry:2800,house:2,car:2,job:2});
+NPC_MEN.push(
+{name:"طارق",dowry:0,house:2,car:1,job:2},{name:"زياد",dowry:0,house:3,car:1,job:3},{name:"باسل",dowry:0,house:4,car:2,job:4},
+{name:"هادي",dowry:0,house:1,car:0,job:1},{name:"مالك",dowry:0,house:5,car:3,job:6},{name:"فراس",dowry:0,house:3,car:2,job:3},
+{name:"نادر",dowry:0,house:2,car:2,job:2},{name:"وسام",dowry:0,house:4,car:3,job:5},{name:"عادل",dowry:0,house:1,car:1,job:1},{name:"ليث",dowry:0,house:5,car:4,job:7});
+NPC_WOMEN.concat(NPC_MEN).forEach((n,i)=>{n.att=n.att||ZX_ATTS[(i*7+3)%3]});
+
+(async()=>{
+  if(typeof THREE==="undefined")return;
+  try{const c=window.claude;
+    if(c){
+      try{const u=await c.use("user");if(u){me=(await u.id())||"local";owner=!!u.isOwner()}}catch(e){}
+      try{db=await c.use("db")}catch(e){}
+      try{room=await c.use("room");if(room)room.onPeers(ch=>peers=ch.peers)}catch(e){}
+      try{db.doc("world/announcement").onSnapshot(s=>{if(s&&s.exists){const a=s.data();if(a&&Date.now()-a.at<20000&&a.id!==window._zxLastAnnouncement){window._zxLastAnnouncement=a.id;toast(a.text||"🎉 احتفال في العالم!")}}})}catch(e){}
+      try{db.doc("world/settings").onSnapshot(s=>{if(s&&s.exists){WORLD={...WORLD_DEFAULTS,...s.data()};if($("ownerPanel").style.display==="block"&&owner){$("houseMult").value=WORLD.housePriceMultiplier;$("carMult").value=WORLD.carPriceMultiplier;$("salaryMult").value=WORLD.salaryMultiplier}}})}catch(e){}
+    }
+  }catch(e){}
+  if(!db||me==="local"){db=null;me="local";S=localLoad();players=S?{local:S}:{};gotP=true;tryStart();return}
+  const t=setTimeout(()=>{if(!gotP){gotP=true;tryStart()}},10000);
+  db.doc("approved/"+me).onSnapshot(s=>{approved=!!s.exists;tryStart()},()=>{});
+  db.collection("players").onSnapshot(snap=>{
+    players={};snap.docs.forEach(d=>players[d.id]=d.data());
+    if(!started){clearTimeout(t);gotP=true;S=players[me]||null;tryStart()}
+    else{if(players[me]){S={...S,...players[me]};normalizeJobs();hud();updateWorkButton();if($("bag").style.display==="block")drawBag()}else if(S)players[me]=S;syncHouses()}
+  },()=>{if(!gotP){gotP=true;tryStart()}});
+})();
+
+</script>
+</body>
+</html>
